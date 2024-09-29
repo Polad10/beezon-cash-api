@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model order {
+  id             String       @id(map: "order_pk") @db.Uuid
+  date           DateTime     @db.Date
+  original_price Decimal      @default(0) @db.Decimal(8, 2)
+  current_price  Decimal      @default(0) @db.Decimal(8, 2)
+  status         Int          @default(1)
+  bonus_received Decimal?     @db.Decimal(8, 2)
+  user_id        String       @db.Uuid
+  order_status   order_status @relation(fields: [status], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "status_fk")
+  user           user         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+}
+
+model order_status {
+  id    Int     @id(map: "order_status_pk") @default(autoincrement())
+  name  String  @unique(map: "name_unique") @db.VarChar(50)
+  order order[]
+}
+
+model user {
+  id            String  @id(map: "user_pk") @db.Uuid
+  first_name    String  @db.VarChar(50)
+  last_name     String  @db.VarChar(50)
+  email         String  @unique(map: "email_unique") @db.VarChar(254)
+  phone_nr      String  @unique(map: "phone_nr_unique") @db.VarChar(20)
+  tg_username   String  @unique(map: "tg_username_unique") @db.VarChar(32)
+  referral_code String  @unique(map: "referral_code_unique") @db.VarChar(15)
+  invited_by    String? @db.Uuid
+  balance       Decimal @default(0) @db.Decimal(8, 2)
+  order         order[]
+  user          user?   @relation("userTouser", fields: [invited_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+  other_user    user[]  @relation("userTouser")
+}
