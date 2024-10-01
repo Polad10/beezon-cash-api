@@ -24,7 +24,6 @@ CREATE TABLE "user" (
     "id" UUID NOT NULL,
     "first_name" VARCHAR(50) NOT NULL,
     "last_name" VARCHAR(50) NOT NULL,
-    "email" VARCHAR(254) NOT NULL,
     "phone_nr" VARCHAR(20) NOT NULL,
     "tg_username" VARCHAR(32) NOT NULL,
     "referral_code" VARCHAR(15) NOT NULL,
@@ -36,9 +35,6 @@ CREATE TABLE "user" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "name_unique" ON "order_status"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "email_unique" ON "user"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "phone_nr_unique" ON "user"("phone_nr");
