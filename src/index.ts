@@ -1,14 +1,20 @@
 import express from 'express'
 import dotenv from 'dotenv'
+import cors from 'cors'
 import userRoutes from './routes/userRoutes'
+import meRoutes from './routes/meRoutes'
+import { authMiddleware } from './middlewares/auth'
 
 dotenv.config()
 
 const app = express()
-const port = 3000
+const port = 3001
 
+app.use(cors())
 app.use(express.json())
-app.use('/users', userRoutes)
+app.use(authMiddleware)
+app.use('/api/me', meRoutes)
+app.use('/api/users', userRoutes)
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`)
