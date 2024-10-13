@@ -15,7 +15,6 @@ router.get('/', async (req, res) => {
 
     res.json(user)
   } catch (ex) {
-    console.log(ex)
     res.sendStatus(httpStatusCodes.internalServerError)
   }
 })

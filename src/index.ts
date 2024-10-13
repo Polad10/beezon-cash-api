@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import userRoutes from './routes/userRoutes'
 import meRoutes from './routes/meRoutes'
+import orderRoutes from './routes/orderRoutes'
 import { authMiddleware } from './middlewares/auth'
 
 dotenv.config()
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use(authMiddleware)
 app.use('/api/me', meRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/orders', orderRoutes)
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`)

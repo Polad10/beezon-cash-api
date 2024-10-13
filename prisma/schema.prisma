@@ -15,6 +15,7 @@ model order {
   status         Int          @default(1)
   bonus_received Decimal?     @db.Decimal(8, 2)
   user_id        String       @db.Uuid
+  code           Int          @unique(map: "code_unique")
   order_status   order_status @relation(fields: [status], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "status_fk")
   user           user         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
 }

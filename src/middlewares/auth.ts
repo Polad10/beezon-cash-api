@@ -18,11 +18,9 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
         res.locals.username = authDataParsed?.user?.username
         return next()
       } catch (ex) {
-        console.log(ex)
         return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
       }
     default:
-      console.log('not tma')
       return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
   }
 }
