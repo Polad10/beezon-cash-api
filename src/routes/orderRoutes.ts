@@ -55,6 +55,10 @@ router.post('/:orderId/bonus', async (req, res) => {
       return res.status(httpStatusCodes.notFound).send('Order not found')
     }
 
+    if (!amount.greaterThan(0)) {
+      return res.status(httpStatusCodes.badRequest).send('Amount must be > 0')
+    }
+
     if (amount.greaterThan(user.balance)) {
       return res.status(httpStatusCodes.badRequest).send('Insufficient balance')
     }
@@ -76,7 +80,7 @@ router.post('/:orderId/bonus', async (req, res) => {
     const newOrderPrice = order.current_price.minus(amount)
     const newUserBalance = user.balance.minus(amount)
 
-    await prisma.$transaction([
+    const [updatedOrder, updatedUser] = await prisma.$transaction([
       prisma.order.update({
         where: orderWhereClause,
         data: {
@@ -92,7 +96,7 @@ router.post('/:orderId/bonus', async (req, res) => {
       }),
     ])
 
-    res.sendStatus(httpStatusCodes.ok)
+    res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
   } catch (ex) {
     res.sendStatus(httpStatusCodes.internalServerError)
   }
