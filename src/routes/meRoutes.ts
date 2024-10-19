@@ -13,7 +13,11 @@ router.get('/', async (req, res) => {
       },
     })
 
-    res.json(user)
+    if (user) {
+      return res.json(user)
+    }
+
+    return res.sendStatus(httpStatusCodes.notFound)
   } catch (ex) {
     res.sendStatus(httpStatusCodes.internalServerError)
   }
