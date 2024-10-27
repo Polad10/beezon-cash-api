@@ -7,6 +7,8 @@ import { StringSession } from 'telegram/sessions'
 import readline from 'readline'
 import { Api } from 'telegram'
 import { setTimeout } from 'timers/promises'
+import { customAlphabet } from 'nanoid'
+import { randomUUID } from 'crypto'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -26,9 +28,13 @@ const rl = readline.createInterface({
   output: process.stdout,
 })
 
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+const nanoid = customAlphabet(alphabet, 12)
+
 router.post('/', async (req, res) => {
   try {
-    const orderId = req.body.data.FIELDS.ID
+    const orderId = Number(req.body.data.FIELDS.ID)
+
     const order = (
       await axios.get(`${bitrixApiUrl}/crm.deal.get.json`, {
         params: {
@@ -46,7 +52,49 @@ router.post('/', async (req, res) => {
     const deliveryPrice = order.OPPORTUNITY
     const ponyPrice = order.UF_CRM_1726179898048
 
+    if (stageId == 'NEW') {
+      const contactId = order.CONTACT_ID
+      const date = order.DATE_CREATE
+
+      const contact = (
+        await axios.get(`${bitrixApiUrl}/crm.contact.get.json`, {
+          params: {
+            id: contactId,
+          },
+        })
+      ).data.result
+
+      const [dbUser, dbOrder] = await prisma.$transaction(async (prisma) => {
+        const user = await prisma.user.upsert({
+          where: {
+            tg_username: tgUsername,
+          },
+          update: {},
+          create: {
+            id: randomUUID(),
+            first_name: contact.NAME,
+            last_name: contact.LAST_NAME,
+            phone_nr: contact.PHONE[0].VALUE,
+            tg_username: tgUsername,
+            referral_code: nanoid(),
+          },
+        })
+
+        const order = await prisma.order.create({
+          data: {
+            id: randomUUID(),
+            date: date,
+            user_id: user.id,
+            code: orderId,
+          },
+        })
+
+        return [user, order]
+      })
+    }
+
     await sendUserMessage(tgUsername, orderId, stageId, trackId, weight, deliveryPrice, ponyPrice)
+    res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {
     console.log(ex)
     res.sendStatus(httpStatusCodes.internalServerError)
@@ -55,7 +103,7 @@ router.post('/', async (req, res) => {
 
 async function sendUserMessage(
   tgUsername: string,
-  orderId: string,
+  orderId: number,
   stageId: string,
   trackId: string,
   weight: string,
