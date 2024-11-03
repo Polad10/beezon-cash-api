@@ -31,6 +31,16 @@ const rl = readline.createInterface({
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const nanoid = customAlphabet(alphabet, 12)
 
+router.get('/', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany()
+
+    res.json(orders)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
 router.post('/', async (req, res) => {
   try {
     const orderId = Number(req.body.data.FIELDS.ID)
