@@ -5,6 +5,7 @@ import userRoutes from './routes/userRoutes'
 import meRoutes from './routes/meRoutes'
 import orderRoutes from './routes/orderRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
+import adminUserRoutes from './routes/admin/userRoutes'
 import { authMiddleware } from './middlewares/auth'
 
 dotenv.config()
@@ -20,6 +21,7 @@ app.use('/api/me', meRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/orders', orderRoutes)
 
+app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 
 app.listen(port, () => {
