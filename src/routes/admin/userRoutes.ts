@@ -7,11 +7,7 @@ const router = express.Router()
 
 router.get('/', async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      where: {
-        tg_username: res.locals.username,
-      },
-    })
+    const users = await prisma.user.findMany()
 
     res.json(users)
   } catch (ex) {
