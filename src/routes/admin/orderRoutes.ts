@@ -7,8 +7,8 @@ import { StringSession } from 'telegram/sessions'
 import readline from 'readline'
 import { Api } from 'telegram'
 import { setTimeout } from 'timers/promises'
-import { customAlphabet } from 'nanoid'
 import { randomUUID } from 'crypto'
+import { generateReferralCode } from '../../utils/referralCode'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -27,9 +27,6 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 })
-
-const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-const nanoid = customAlphabet(alphabet, 12)
 
 router.get('/', async (req, res) => {
   try {
@@ -86,7 +83,7 @@ router.post('/', async (req, res) => {
             last_name: contact.LAST_NAME,
             phone_nr: contact.PHONE[0].VALUE,
             tg_username: tgUsername,
-            referral_code: nanoid(),
+            referral_code: generateReferralCode(),
           },
         })
 
