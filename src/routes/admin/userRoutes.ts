@@ -33,4 +33,18 @@ router.post('/', async (req, res) => {
   }
 })
 
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.user.delete({
+      where: {
+        id: req.params.id,
+      },
+    })
+
+    res.sendStatus(httpStatusCodes.ok)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
 export default router
