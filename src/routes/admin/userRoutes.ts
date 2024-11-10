@@ -19,14 +19,12 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const user: user = {
-      ...req.body,
-      id: randomUUID(),
-      referral_code: generateReferralCode(),
-    }
-
     const createdUser = await prisma.user.create({
-      data: user,
+      data: {
+        ...req.body,
+        id: randomUUID(),
+        referral_code: generateReferralCode(),
+      },
     })
 
     res.json(createdUser)
