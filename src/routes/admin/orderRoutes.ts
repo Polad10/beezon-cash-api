@@ -45,6 +45,23 @@ router.post('/', async (req, res) => {
   }
 })
 
+router.put('/:id', async (req, res) => {
+  try {
+    const editedOrder = await prisma.order.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        ...req.body,
+      },
+    })
+
+    res.json(editedOrder)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
 router.delete('/:id', async (req, res) => {
   try {
     await prisma.order.delete({
