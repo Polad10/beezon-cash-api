@@ -33,6 +33,23 @@ router.post('/', async (req, res) => {
   }
 })
 
+router.put('/:id', async (req, res) => {
+  try {
+    const editedUser = await prisma.user.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        ...req.body,
+      },
+    })
+
+    res.json(editedUser)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
 router.delete('/:id', async (req, res) => {
   try {
     await prisma.user.delete({
