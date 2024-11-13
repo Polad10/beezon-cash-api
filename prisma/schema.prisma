@@ -39,3 +39,10 @@ model user {
   user          user?   @relation("userTouser", fields: [invited_by], references: [id], onUpdate: NoAction, map: "user_fk")
   other_user    user[]  @relation("userTouser")
 }
+
+model message {
+  id           Int    @id(map: "messages_pk") @default(autoincrement())
+  name         String @db.VarChar(50)
+  text         String
+  order_status Int    @unique(map: "order_status_id_unique")
+}
