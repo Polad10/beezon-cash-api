@@ -1,6 +1,6 @@
 import express from 'express'
 import httpStatusCodes from '../../constants/httpStatusCodes'
-import { PrismaClient, user } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { generateReferralCode } from '../../utils/referralCode'
 
