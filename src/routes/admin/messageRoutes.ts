@@ -29,4 +29,35 @@ router.post('/', async (req, res) => {
   }
 })
 
+router.put('/:id', async (req, res) => {
+  try {
+    const editedMessage = await prisma.message.update({
+      where: {
+        id: Number(req.params.id),
+      },
+      data: {
+        ...req.body,
+      },
+    })
+
+    res.json(editedMessage)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.message.delete({
+      where: {
+        id: Number(req.params.id),
+      },
+    })
+
+    res.sendStatus(httpStatusCodes.ok)
+  } catch (ex) {
+    res.sendStatus(httpStatusCodes.internalServerError)
+  }
+})
+
 export default router
