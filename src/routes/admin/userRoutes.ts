@@ -7,17 +7,17 @@ import { generateReferralCode } from '../../utils/referralCode'
 const prisma = new PrismaClient()
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const users = await prisma.user.findMany()
 
     res.json(users)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const createdUser = await prisma.user.create({
       data: {
@@ -29,11 +29,11 @@ router.post('/', async (req, res) => {
 
     res.json(createdUser)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const editedUser = await prisma.user.update({
       where: {
@@ -46,11 +46,11 @@ router.put('/:id', async (req, res) => {
 
     res.json(editedUser)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await prisma.user.delete({
       where: {
@@ -60,7 +60,7 @@ router.delete('/:id', async (req, res) => {
 
     res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 

@@ -7,7 +7,7 @@ import { OrderStatus } from '../enums/OrderStatus'
 const prisma = new PrismaClient()
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
@@ -19,11 +19,11 @@ router.get('/', async (req, res) => {
 
     res.json(orders)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.post('/:orderId/bonus', async (req, res) => {
+router.post('/:orderId/bonus', async (req, res, next) => {
   try {
     const orderId = req.params.orderId
     const amount = new Decimal(req.body.amount)
@@ -98,7 +98,7 @@ router.post('/:orderId/bonus', async (req, res) => {
 
     res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 

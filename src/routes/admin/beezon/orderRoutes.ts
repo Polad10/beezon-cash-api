@@ -28,7 +28,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 })
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const orderId = Number(req.body.data.FIELDS.ID)
 
@@ -93,8 +93,7 @@ router.post('/', async (req, res) => {
     await sendUserMessage(tgUsername, orderId, stageId, trackId, weight, deliveryPrice, ponyPrice)
     res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {
-    console.log(ex)
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 

@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
     return res.sendStatus(httpStatusCodes.notFound)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 

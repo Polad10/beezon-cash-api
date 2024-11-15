@@ -5,17 +5,17 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const messages = await prisma.message.findMany()
 
     res.json(messages)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const createdMessage = await prisma.message.create({
       data: {
@@ -25,11 +25,11 @@ router.post('/', async (req, res) => {
 
     res.json(createdMessage)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const editedMessage = await prisma.message.update({
       where: {
@@ -42,11 +42,11 @@ router.put('/:id', async (req, res) => {
 
     res.json(editedMessage)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await prisma.message.delete({
       where: {
@@ -56,7 +56,7 @@ router.delete('/:id', async (req, res) => {
 
     res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {
-    res.sendStatus(httpStatusCodes.internalServerError)
+    next(ex)
   }
 })
 
