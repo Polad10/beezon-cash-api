@@ -23,8 +23,8 @@ jobs:
     
     # Build the Docker image
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ghcr.io/${{ github.repository | lower }}/beezon-cash-api
+      run: docker build . --file Dockerfile --tag ghcr.io/polad10/beezon-cash-api
 
     # Push the Docker image to GitHub Container Registry
     - name: Push Docker image to GitHub Container Registry
-      run: docker push ghcr.io/${{ github.repository | lower }}/beezon-cash-api
+      run: docker push ghcr.io/polad10/beezon-cash-api
