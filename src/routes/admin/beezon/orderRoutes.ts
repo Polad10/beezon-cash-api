@@ -61,7 +61,7 @@ router.post('/', async (req, res, next) => {
         })
       ).data.result
 
-      const [dbUser, dbOrder] = await prisma.$transaction(async (prisma) => {
+      const [dbUser, dbOrder] = await prisma.$transaction(async (prisma: any) => {
         const user = await prisma.user.upsert({
           where: {
             tg_username: tgUsername,
