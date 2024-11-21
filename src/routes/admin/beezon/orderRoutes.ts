@@ -82,7 +82,6 @@ router.post('/', async (req, res, next) => {
             id: randomUUID(),
             date: date,
             user_id: user.id,
-            code: orderId,
           },
         })
 

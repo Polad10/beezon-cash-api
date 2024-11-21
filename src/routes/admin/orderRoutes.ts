@@ -25,7 +25,6 @@ router.post('/', async (req, res, next) => {
         original_price: req.body.original_price,
         current_price: req.body.current_price,
         bonus_received: req.body.bonus_received,
-        code: req.body.code,
         user: {
           connect: {
             id: req.body.user_id,
