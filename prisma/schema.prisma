@@ -18,7 +18,7 @@ model order {
   user_id               String                    @db.Uuid
   code                  Int                       @unique(map: "code_unique") @default(autoincrement())
   city                  Int                       @default(0)
-  weight_8_2_           Decimal                   @default(0) @map("weight(8,2)") @db.Decimal(8, 2)
+  weight                Decimal                   @default(0) @db.Decimal(8, 2)
   weight_rounded        Boolean                   @default(false)
   additional_cost       Decimal                   @default(0) @db.Decimal(8, 2)
   partner_cost          Decimal                   @default(0) @db.Decimal(8, 2)
