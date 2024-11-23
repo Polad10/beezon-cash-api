@@ -9,25 +9,25 @@ datasource db {
 }
 
 model order {
-  id                    String                    @id(map: "order_pk") @db.Uuid
-  date                  DateTime                  @db.Date
-  original_price        Decimal                   @default(0) @db.Decimal(8, 2)
-  current_price         Decimal                   @default(0) @db.Decimal(8, 2)
-  status                Int                       @default(0)
-  bonus_received        Decimal                   @default(0) @db.Decimal(8, 2)
-  user_id               String                    @db.Uuid
-  code                  Int                       @unique(map: "code_unique") @default(autoincrement())
-  city                  Int                       @default(0)
-  weight                Decimal                   @default(0) @db.Decimal(8, 2)
-  weight_rounded        Boolean                   @default(false)
-  additional_cost       Decimal                   @default(0) @db.Decimal(8, 2)
-  partner_cost          Decimal                   @default(0) @db.Decimal(8, 2)
-  description           String?
-  city_order_cityTocity city                      @relation("order_cityTocity", fields: [city], references: [id], onDelete: SetDefault, map: "order_city_fk")
-  order_status          order_status              @relation(fields: [status], references: [id], onDelete: SetDefault, map: "status_fk")
-  user                  user                      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
-  delivery_providers    order_delivery_provider[]
-  order_types           order_order_type[]
+  id                  String               @id(map: "order_pk") @db.Uuid
+  date                DateTime             @db.Date
+  original_price      Decimal              @default(0) @db.Decimal(8, 2)
+  current_price       Decimal              @default(0) @db.Decimal(8, 2)
+  status              Int                  @default(0)
+  bonus_received      Decimal              @default(0) @db.Decimal(8, 2)
+  user_id             String               @db.Uuid
+  code                Int                  @unique(map: "code_unique") @default(autoincrement())
+  city                Int                  @default(0)
+  weight              Decimal              @default(0) @db.Decimal(8, 2)
+  weight_rounded      Boolean              @default(false)
+  additional_cost     Decimal              @default(0) @db.Decimal(8, 2)
+  partner_cost        Decimal              @default(0) @db.Decimal(8, 2)
+  description         String?
+  order_city          city                 @relation("order_cityTocity", fields: [city], references: [id], onDelete: SetDefault, map: "order_city_fk")
+  order_status        order_status         @relation(fields: [status], references: [id], onDelete: SetDefault, map: "status_fk")
+  user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
+  order_tracks        order_track[]
+  order_type_mappings order_type_mapping[]
 }
 
 model order_status {
@@ -64,32 +64,32 @@ model city {
 }
 
 model delivery_provider {
-  id                                                                                   Int                       @id(map: "delivery_provider_pk") @default(autoincrement())
-  name                                                                                 String                    @unique(map: "delivery_provider_name_unique") @db.VarChar(100)
-  order_delivery_provider_order_delivery_provider_delivery_providerTodelivery_provider order_delivery_provider[] @relation("order_delivery_provider_delivery_providerTodelivery_provider")
-}
-
-model order_delivery_provider {
-  id                                                                             String            @id(map: "order_delivery_provider_pk") @db.Uuid
-  order_id                                                                       String            @db.Uuid
-  delivery_provider                                                              Int
-  track_number                                                                   String            @db.VarChar(255)
-  delivery_provider_order_delivery_provider_delivery_providerTodelivery_provider delivery_provider @relation("order_delivery_provider_delivery_providerTodelivery_provider", fields: [delivery_provider], references: [id], onDelete: Cascade, map: "order_delivery_provider_delivery_provider_fk")
-  order                                                                          order             @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "order_delivery_provider_order_fk_1")
-}
-
-model order_order_type {
-  id                                                 String     @id(map: "order_order_type_pk") @db.Uuid
-  order_id                                           String     @db.Uuid
-  order_type                                         Int
-  order                                              order      @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "order_order_type_order_fk")
-  order_type_order_order_type_order_typeToorder_type order_type @relation("order_order_type_order_typeToorder_type", fields: [order_type], references: [id], onDelete: Cascade, map: "order_order_type_order_type_fk")
-
-  @@index([order_id])
+  id                                                           Int           @id(map: "delivery_provider_pk") @default(autoincrement())
+  name                                                         String        @unique(map: "delivery_provider_name_unique") @db.VarChar(100)
+  order_track_order_track_delivery_providerTodelivery_provider order_track[] @relation("order_track_delivery_providerTodelivery_provider")
 }
 
 model order_type {
-  id                                                       Int                @id(map: "order_type_pk") @default(autoincrement())
-  name                                                     String             @unique(map: "order_type_name_unique") @db.VarChar(100)
-  order_order_type_order_order_type_order_typeToorder_type order_order_type[] @relation("order_order_type_order_typeToorder_type")
+  id                                                           Int                  @id(map: "order_type_pk") @default(autoincrement())
+  name                                                         String               @unique(map: "order_type_name_unique") @db.VarChar(100)
+  order_type_mapping_order_type_mapping_order_typeToorder_type order_type_mapping[] @relation("order_type_mapping_order_typeToorder_type")
+}
+
+model order_track {
+  id                                                                 String            @id(map: "order_delivery_provider_pk") @db.Uuid
+  order_id                                                           String            @db.Uuid
+  delivery_provider                                                  Int
+  track_number                                                       String            @db.VarChar(255)
+  delivery_provider_order_track_delivery_providerTodelivery_provider delivery_provider @relation("order_track_delivery_providerTodelivery_provider", fields: [delivery_provider], references: [id], onDelete: Cascade, map: "order_delivery_provider_delivery_provider_fk")
+  order                                                              order             @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "order_delivery_provider_order_fk_1")
+}
+
+model order_type_mapping {
+  id                                                   String     @id(map: "order_order_type_pk") @db.Uuid
+  order_id                                             String     @db.Uuid
+  order_type                                           Int
+  order                                                order      @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "order_order_type_order_fk")
+  order_type_order_type_mapping_order_typeToorder_type order_type @relation("order_type_mapping_order_typeToorder_type", fields: [order_type], references: [id], onDelete: Cascade, map: "order_order_type_order_type_fk")
+
+  @@index([order_id], map: "order_order_type_order_id_idx")
 }
