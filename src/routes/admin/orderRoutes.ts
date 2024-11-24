@@ -4,6 +4,7 @@ import httpStatusCodes from '../../constants/httpStatusCodes'
 import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
+import { City } from '../../enums/City'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -50,7 +51,7 @@ router.post('/', async (req, res, next) => {
           },
           order_city: {
             connect: {
-              id: req.body.city,
+              id: req.body.city || City.Other,
             },
           },
         },
