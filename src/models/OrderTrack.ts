@@ -2,17 +2,19 @@ export interface OrderTrack {
   id: string
   order_id: string
   delivery_provider: DeliveryProvider
-  track_number: string
+  track_number?: string
 }
 
 export interface OrderTrackRequest {
   delivery_provider: DeliveryProvider
-  track_number: string
+  track_number?: string
 }
 
 export enum DeliveryProvider {
+  Ozon,
+  Wilbderries,
   CDEK,
-  Post,
+  PostRussia,
   Boxberry,
   POST5,
 }

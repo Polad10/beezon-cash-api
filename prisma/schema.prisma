@@ -79,7 +79,7 @@ model order_track {
   id                                                                 String            @id(map: "order_delivery_provider_pk") @db.Uuid
   order_id                                                           String            @db.Uuid
   delivery_provider                                                  Int
-  track_number                                                       String            @db.VarChar(255)
+  track_number                                                       String?           @db.VarChar(255)
   delivery_provider_order_track_delivery_providerTodelivery_provider delivery_provider @relation("order_track_delivery_providerTodelivery_provider", fields: [delivery_provider], references: [id], onDelete: Cascade, map: "order_delivery_provider_delivery_provider_fk")
   order                                                              order             @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "order_delivery_provider_order_fk_1")
 }
