@@ -46,7 +46,7 @@ model user {
   invited_by    String? @db.Uuid
   balance       Decimal @default(0) @db.Decimal(8, 2)
   order         order[]
-  user          user?   @relation("userTouser", fields: [invited_by], references: [id], map: "user_fk")
+  inviter       user?   @relation("userTouser", fields: [invited_by], references: [id], map: "user_fk")
   other_user    user[]  @relation("userTouser")
 }
 

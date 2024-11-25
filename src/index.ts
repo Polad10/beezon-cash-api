@@ -11,6 +11,7 @@ import { authMiddleware } from './middlewares/auth'
 import mongoose from 'mongoose'
 import { errorMiddleware } from './middlewares/error'
 import { logMiddleware } from './middlewares/log'
+import publicOrderRoutes from './routes/public/orderRoutes'
 
 dotenv.config()
 
@@ -29,6 +30,8 @@ app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 app.use('/admin/api/messages', adminMessageRoutes)
 app.use('/admin/beezon/api/orders', adminBeezonOrderRoutes)
+
+app.use('/public/api/orders', publicOrderRoutes)
 
 app.use(errorMiddleware)
 
