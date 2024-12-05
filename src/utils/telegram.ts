@@ -1,24 +1,15 @@
-import express from 'express'
-import { PrismaClient } from '@prisma/client'
-import httpStatusCodes from '../../../constants/httpStatusCodes'
-import axios from 'axios'
-import { TelegramClient } from 'telegram'
 import { StringSession } from 'telegram/sessions'
-import readline from 'readline'
+import { TelegramClient } from 'telegram'
 import { Api } from 'telegram'
 import { setTimeout } from 'timers/promises'
-import { randomUUID } from 'crypto'
-import { generateReferralCode } from '../../../utils/referralCode'
-
-const prisma = new PrismaClient()
-const router = express.Router()
+import readline from 'readline'
+import { OrderStatus } from '../enums/OrderStatus'
+import { Decimal } from '@prisma/client/runtime/library'
 
 const tgApiId = Number(process.env.TG_API_ID)
 const tgApiHash = String(process.env.TG_API_HASH)
-const bitrixSecret = process.env.BITRIX_SECRET
-const bitrixApiUrl = `https://beezonlogistics.bitrix24.ru/rest/12/${bitrixSecret}`
-
 const stringSession = new StringSession('')
+
 const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
   connectionRetries: 3,
 })
@@ -28,88 +19,19 @@ const rl = readline.createInterface({
   output: process.stdout,
 })
 
-router.post('/', async (req, res, next) => {
-  try {
-    const orderId = Number(req.body.data.FIELDS.ID)
-
-    const order = (
-      await axios.get(`${bitrixApiUrl}/crm.deal.get.json`, {
-        params: {
-          id: orderId,
-        },
-      })
-    ).data.result
-
-    let tgUsername: string = order.UF_CRM_1725361131
-    tgUsername = tgUsername.replace(/^@/, '')
-
-    const stageId = order.STAGE_ID
-    const trackId = order.UF_CRM_1725480982977
-    const weight = order.UF_CRM_1686476646301
-    const deliveryPrice = order.OPPORTUNITY
-    const ponyPrice = order.UF_CRM_1726179898048
-
-    if (stageId == 'NEW') {
-      const contactId = order.CONTACT_ID
-      const date = order.DATE_CREATE
-
-      const contact = (
-        await axios.get(`${bitrixApiUrl}/crm.contact.get.json`, {
-          params: {
-            id: contactId,
-          },
-        })
-      ).data.result
-
-      const [dbUser, dbOrder] = await prisma.$transaction(async (prisma: any) => {
-        const user = await prisma.user.upsert({
-          where: {
-            tg_username: tgUsername,
-          },
-          update: {},
-          create: {
-            id: randomUUID(),
-            first_name: contact.NAME,
-            last_name: contact.LAST_NAME,
-            phone_nr: contact.PHONE[0].VALUE,
-            tg_username: tgUsername,
-            referral_code: generateReferralCode(),
-          },
-        })
-
-        const order = await prisma.order.create({
-          data: {
-            id: randomUUID(),
-            date: date,
-            user_id: user.id,
-          },
-        })
-
-        return [user, order]
-      })
-    }
-
-    await sendUserMessage(tgUsername, orderId, stageId, trackId, weight, deliveryPrice, ponyPrice)
-    res.sendStatus(httpStatusCodes.ok)
-  } catch (ex) {
-    next(ex)
-  }
-})
-
-async function sendUserMessage(
+export async function sendUserMessage(
   tgUsername: string,
-  orderId: number,
-  stageId: string,
-  trackId: string,
-  weight: string,
-  deliveryPrice: string,
-  ponyPrice: string
+  orderCode: number,
+  orderStatus: OrderStatus,
+  weight: Decimal,
+  deliveryPrice: Decimal,
+  ponyPrice: Decimal
 ) {
   let message = ''
 
-  switch (stageId) {
-    case 'NEW':
-      message = `**Ваш заказ #${orderId} принят!**
+  switch (orderStatus) {
+    case OrderStatus.New:
+      message = `**Ваш заказ #${orderCode} принят!**
 
 Когда у всех ваших товаров будет статус **Готов к выдаче**, отправляйте нам данные для получения посылки прямо в этот чат
 
@@ -120,7 +42,7 @@ async function sendUserMessage(
 
 **P.S. Если будут вопросы - пишите, мы всегда на связи** 💙`
       break
-    case 'UC_ZFPBJQ':
+    case OrderStatus.ArrivedInTbilisi:
       message = `**Здравствуйте, ваш заказ приехал в Тбилиси! 🎉** 
 
 Вес посылки - **${weight} кг**
@@ -150,7 +72,7 @@ async function sendUserMessage(
 
 **Расписание указано на ближайшие дни, если планируете забрать в другой день - можете уточнить день/время в чате дополнительно**`
       break
-    case 'UC_9D298A':
+    case OrderStatus.ArrivedInDestination:
       message = `**Здравствуйте, ваш заказ приехал в Тбилиси! 🎉** 
 
 Вес посылки - **${weight} кг**
@@ -177,22 +99,6 @@ async function sendUserMessage(
 - ФИО
 - Адрес и номер телефона получателя`
       break
-    case 'C4:PREPARATION':
-      message = `**Заказ #${orderId} на доставку из Грузии в Россию оформлен!**
-
-**Трек-номер отправления: **\`${trackId}\`
-
-Следить за статусом можно **[здесь](https://www.cdek.ru/m/order/${trackId})** или в **[мобильном приложении](https://onelink.to/gjy7d2)**
-
-**Мы сообщим, когда посылка будет передана в СДЭК для отправки**`
-      break
-    case 'C4:EXECUTING':
-      message = `**Ваша посылка \`${trackId}\` в пути!**
-
-Следить за статусом можно **[здесь](https://www.cdek.ru/m/order/${trackId})** или в **[мобильном приложении](https://onelink.to/gjy7d2)**
-
-**После получения заказа будем рады любой обратной связи по качеству доставки - это помогает нам становиться лучше`
-      break
   }
 
   await tgClient.start({
@@ -216,5 +122,3 @@ async function sendUserMessage(
     await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'markdown' })
   }
 }
-
-export default router

@@ -6,7 +6,6 @@ import orderRoutes from './routes/orderRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
-import adminBeezonOrderRoutes from './routes/admin/beezon/orderRoutes'
 import { authMiddleware } from './middlewares/auth'
 import mongoose from 'mongoose'
 import { errorMiddleware } from './middlewares/error'
@@ -29,7 +28,6 @@ app.use('/api/orders', orderRoutes)
 app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 app.use('/admin/api/messages', adminMessageRoutes)
-app.use('/admin/beezon/api/orders', adminBeezonOrderRoutes)
 
 app.use('/public/api/orders', publicOrderRoutes)
 
