@@ -17,12 +17,12 @@ model order {
   bonus_received      Decimal              @default(0) @db.Decimal(8, 2)
   user_id             String               @db.Uuid
   code                Int                  @unique(map: "code_unique") @default(autoincrement())
+  additional_cost     Decimal              @default(0) @db.Decimal(8, 2)
   city                Int                  @default(0)
+  description         String?
+  partner_cost        Decimal              @default(0) @db.Decimal(8, 2)
   weight              Decimal              @default(0) @db.Decimal(8, 2)
   weight_rounded      Boolean              @default(false)
-  additional_cost     Decimal              @default(0) @db.Decimal(8, 2)
-  partner_cost        Decimal              @default(0) @db.Decimal(8, 2)
-  description         String?
   order_city          city                 @relation("order_cityTocity", fields: [city], references: [id], onDelete: SetDefault, map: "order_city_fk")
   order_status        order_status         @relation(fields: [status], references: [id], onDelete: SetDefault, map: "status_fk")
   user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
@@ -40,7 +40,7 @@ model user {
   id            String  @id(map: "user_pk") @db.Uuid
   first_name    String  @db.VarChar(50)
   last_name     String  @db.VarChar(50)
-  phone_nr      String  @unique(map: "phone_nr_unique") @db.VarChar(20)
+  phone_nr      String  @db.VarChar(20)
   tg_username   String  @unique(map: "tg_username_unique") @db.VarChar(32)
   referral_code String  @unique(map: "referral_code_unique") @db.VarChar(15)
   invited_by    String? @db.Uuid
