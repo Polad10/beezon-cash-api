@@ -26,7 +26,11 @@ router.post('/', async (req, res, next) => {
         where: {
           tg_username: req.body.tg_username,
         },
-        update: {},
+        update: {
+          first_name: req.body.first_name,
+          last_name: req.body.last_name,
+          phone_nr: req.body.phone_nr,
+        },
         create: {
           id: randomUUID(),
           first_name: req.body.first_name,
