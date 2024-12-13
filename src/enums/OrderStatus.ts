@@ -1,7 +1,12 @@
 export enum OrderStatus {
   New,
-  OnTheWay,
-  ArrivedInDestinationCountry,
-  WaitingForPayment,
+  WarehouseRF,
+  Courier1,
+  Courier2,
+  ProcessedInTbilisi,
+  ReadyForDeliveryInTbilisi,
+  WarehouseTbilisi,
+  ReadyForDeliveryByPony,
+  WaitingForDeliveryByPony,
   Delivered,
 }

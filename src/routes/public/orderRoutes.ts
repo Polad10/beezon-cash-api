@@ -13,14 +13,16 @@ const router = express.Router()
 router.post('/', async (req, res, next) => {
   try {
     await prisma.$transaction(async (prisma: any) => {
-      const inviter = await prisma.user.findFirst({
-        where: {
-          referral_code: {
-            equals: req.body.invite_code,
-            mode: 'insensitive',
-          },
-        },
-      })
+      const inviter = req.body.invite_code
+        ? await prisma.user.findFirst({
+            where: {
+              referral_code: {
+                equals: req.body.invite_code,
+                mode: 'insensitive',
+              },
+            },
+          })
+        : null
 
       const user = await prisma.user.upsert({
         where: {

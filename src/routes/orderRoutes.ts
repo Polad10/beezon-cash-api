@@ -63,8 +63,8 @@ router.post('/:orderId/bonus', async (req, res, next) => {
       return res.status(httpStatusCodes.badRequest).send('Insufficient balance')
     }
 
-    if (order.status != OrderStatus.WaitingForPayment) {
-      return res.status(httpStatusCodes.badRequest).send('Order status is not "WaitingForPayment"')
+    if (!orderStatusEligibleForBonus(order.status)) {
+      return res.status(httpStatusCodes.badRequest).send('Order status is not eligible for bonus')
     }
 
     if (!order.current_price.equals(order.original_price)) {
@@ -101,5 +101,14 @@ router.post('/:orderId/bonus', async (req, res, next) => {
     next(ex)
   }
 })
+
+function orderStatusEligibleForBonus(orderStatus: OrderStatus) {
+  return (
+    orderStatus == OrderStatus.ReadyForDeliveryInTbilisi ||
+    orderStatus == OrderStatus.WarehouseTbilisi ||
+    orderStatus == OrderStatus.ReadyForDeliveryByPony ||
+    orderStatus == OrderStatus.WaitingForDeliveryByPony
+  )
+}
 
 export default router
