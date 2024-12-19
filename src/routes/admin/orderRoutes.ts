@@ -1,10 +1,11 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient, user } from '@prisma/client'
 import httpStatusCodes from '../../constants/httpStatusCodes'
 import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
 import { City } from '../../enums/City'
+import { sendStageUpdateMessage } from '../../utils/telegram'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -26,42 +27,55 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const createdOrder = await prisma.$transaction(async (prisma: any) => {
-      const order = await prisma.order.create({
-        data: {
-          id: randomUUID(),
-          date: req.body.date,
-          bonus_received: req.body.bonus_received,
-          weight: req.body.weight,
-          weight_rounded: req.body.weight_rounded,
-          additional_cost: req.body.additional_cost,
-          original_price: req.body.original_price,
-          current_price: req.body.current_price,
-          partner_cost: req.body.partner_cost,
-          description: req.body.description,
-          user: {
-            connect: {
-              id: req.body.user_id,
+    const createdOrder: Prisma.orderGetPayload<{ include: { user: true } }> = await prisma.$transaction(
+      async (prisma: any) => {
+        const order = await prisma.order.create({
+          data: {
+            id: randomUUID(),
+            date: req.body.date,
+            bonus_received: req.body.bonus_received,
+            weight: req.body.weight,
+            weight_rounded: req.body.weight_rounded,
+            additional_cost: req.body.additional_cost,
+            original_price: req.body.original_price,
+            current_price: req.body.current_price,
+            partner_cost: req.body.partner_cost,
+            description: req.body.description,
+            user: {
+              connect: {
+                id: req.body.user_id,
+              },
+            },
+            order_status: {
+              connect: {
+                id: req.body.status,
+              },
+            },
+            order_city: {
+              connect: {
+                id: req.body.city || City.Other,
+              },
             },
           },
-          order_status: {
-            connect: {
-              id: req.body.status,
-            },
-          },
-          order_city: {
-            connect: {
-              id: req.body.city || City.Other,
-            },
-          },
-        },
-      })
+        })
 
-      await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
-      await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
+        await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
+        await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      return await getOrder(prisma, order.id)
-    })
+        return await getOrder(prisma, order.id)
+      }
+    )
+
+    if (req.body.send_notification) {
+      sendStageUpdateMessage(
+        createdOrder.user.tg_username,
+        createdOrder.code,
+        createdOrder.status,
+        createdOrder.weight,
+        createdOrder.current_price,
+        createdOrder.partner_cost
+      )
+    }
 
     res.json(createdOrder)
   } catch (ex) {
@@ -71,44 +85,57 @@ router.post('/', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const editedOrder = await prisma.$transaction(async (prisma: any) => {
-      const order = await prisma.order.update({
-        where: {
-          id: req.params.id,
-        },
-        data: {
-          date: req.body.date,
-          bonus_received: req.body.bonus_received,
-          weight: req.body.weight,
-          weight_rounded: req.body.weight_rounded,
-          additional_cost: req.body.additional_cost,
-          original_price: req.body.original_price,
-          current_price: req.body.current_price,
-          partner_cost: req.body.partner_cost,
-          description: req.body.description,
-          user: {
-            connect: {
-              id: req.body.user_id,
+    const editedOrder: Prisma.orderGetPayload<{ include: { user: true } }> = await prisma.$transaction(
+      async (prisma: any) => {
+        const order = await prisma.order.update({
+          where: {
+            id: req.params.id,
+          },
+          data: {
+            date: req.body.date,
+            bonus_received: req.body.bonus_received,
+            weight: req.body.weight,
+            weight_rounded: req.body.weight_rounded,
+            additional_cost: req.body.additional_cost,
+            original_price: req.body.original_price,
+            current_price: req.body.current_price,
+            partner_cost: req.body.partner_cost,
+            description: req.body.description,
+            user: {
+              connect: {
+                id: req.body.user_id,
+              },
+            },
+            order_status: {
+              connect: {
+                id: req.body.status,
+              },
+            },
+            order_city: {
+              connect: {
+                id: req.body.city,
+              },
             },
           },
-          order_status: {
-            connect: {
-              id: req.body.status,
-            },
-          },
-          order_city: {
-            connect: {
-              id: req.body.city,
-            },
-          },
-        },
-      })
+        })
 
-      await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
-      await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
+        await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
+        await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      return await getOrder(prisma, order.id)
-    })
+        return await getOrder(prisma, order.id)
+      }
+    )
+
+    if (req.body.send_notification) {
+      sendStageUpdateMessage(
+        editedOrder.user.tg_username,
+        editedOrder.code,
+        editedOrder.status,
+        editedOrder.weight,
+        editedOrder.current_price,
+        editedOrder.partner_cost
+      )
+    }
 
     res.json(editedOrder)
   } catch (ex) {
@@ -177,6 +204,7 @@ async function getOrder(prisma: any, id: string) {
       id: id,
     },
     include: {
+      user: true,
       order_type_mappings: true,
       order_tracks: true,
     },
