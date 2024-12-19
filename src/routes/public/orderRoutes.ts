@@ -1,18 +1,24 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { order, PrismaClient, user } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
 import { City } from '../../enums/City'
 import { generateReferralCode } from '../../utils/referralCode'
 import httpStatusCodes from '../../constants/httpStatusCodes'
+import { sendStageUpdateMessage } from '../../utils/telegram'
 
 const prisma = new PrismaClient()
 const router = express.Router()
 
+interface userOrderType {
+  user: user
+  order: order
+}
+
 router.post('/', async (req, res, next) => {
   try {
-    await prisma.$transaction(async (prisma: any) => {
+    const { user, order }: userOrderType = await prisma.$transaction(async (prisma: any) => {
       const inviter = req.body.invite_code
         ? await prisma.user.findFirst({
             where: {
@@ -64,7 +70,18 @@ router.post('/', async (req, res, next) => {
 
       await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
       await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
+
+      return { user, order }
     })
+
+    sendStageUpdateMessage(
+      user.tg_username,
+      order.code,
+      order.status,
+      order.weight,
+      order.current_price,
+      order.partner_cost
+    )
 
     res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {

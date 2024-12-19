@@ -1,124 +1,133 @@
-// import { StringSession } from 'telegram/sessions'
-// import { TelegramClient } from 'telegram'
-// import { Api } from 'telegram'
-// import { setTimeout } from 'timers/promises'
-// import readline from 'readline'
-// import { OrderStatus } from '../enums/OrderStatus'
-// import { Decimal } from '@prisma/client/runtime/library'
+import { StringSession } from 'telegram/sessions'
+import { TelegramClient } from 'telegram'
+import { Api } from 'telegram'
+import { setTimeout } from 'timers/promises'
+import readline from 'readline'
+import { OrderStatus } from '../enums/OrderStatus'
+import { Decimal } from '@prisma/client/runtime/library'
 
-// const tgApiId = Number(process.env.TG_API_ID)
-// const tgApiHash = String(process.env.TG_API_HASH)
-// const stringSession = new StringSession('')
+const tgApiId = Number(process.env.TG_API_ID)
+const tgApiHash = String(process.env.TG_API_HASH)
+const stringSession = new StringSession('')
 
-// const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
-//   connectionRetries: 3,
-// })
+const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
+  connectionRetries: 3,
+})
 
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// })
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+})
 
-// export async function sendUserMessage(
-//   tgUsername: string,
-//   orderCode: number,
-//   orderStatus: OrderStatus,
-//   weight: Decimal,
-//   deliveryPrice: Decimal,
-//   ponyPrice: Decimal
-// ) {
-//   let message = ''
+export async function sendStageUpdateMessage(
+  tgUsername: string,
+  orderCode: number,
+  orderStatus: OrderStatus,
+  weight: Decimal,
+  deliveryPrice: Decimal,
+  ponyPrice: Decimal
+) {
+  let message = ''
 
-//   switch (orderStatus) {
-//     case OrderStatus.New:
-//       message = `**Ваш заказ #${orderCode} принят!**
+  switch (orderStatus) {
+    case OrderStatus.New:
+      message = `<b>Ваш заказ #${orderCode} принят!</b>
 
-// Когда у всех ваших товаров будет статус **Готов к выдаче**, отправляйте нам данные для получения посылки прямо в этот чат
+Когда у всех ваших товаров будет статус <b>Готов к выдаче</b>, отправляйте нам данные для получения посылки прямо в этот чат
 
-// Даты отправок из Владикавказа мы публикуем **[здесь](https://t.me/beezon_logistic/234)**
+Даты отправок из Владикавказа мы публикуем <a href="https://t.me/beezon_logistic/234"><b>здесь</b></a>
 
-// **ВАЖНО:**
-// Курьеры могут снять заводскую упаковку товаров для упрощения прохождения таможни. Если для каких-либо товаров важно сохранить упаковку, укажите это при отправке штрих-кода
+<b>ВАЖНО:</b>
+Курьеры могут снять заводскую упаковку товаров для упрощения прохождения таможни. Если для каких-либо товаров важно сохранить упаковку, укажите это при отправке штрих-кода
 
-// **P.S. Если будут вопросы - пишите, мы всегда на связи** 💙`
-//       break
-//     case OrderStatus.ArrivedInTbilisi:
-//       message = `**Здравствуйте, ваш заказ приехал в Тбилиси! 🎉**
+<b>P.S. Если будут вопросы - пишите, мы всегда на связи</b> 💙`
+      break
+    case OrderStatus.ProcessedInTbilisi:
+      message = `<b>Здравствуйте, ваш заказ приехал в Тбилиси! 🎉</b>
 
-// Вес посылки - **${weight} кг**
-// Стоимость доставки до Грузии:
-// **${deliveryPrice} GEL**
+Вес посылки - <b>${weight} кг</b>
+Стоимость доставки до Грузии:
+<b>${deliveryPrice} GEL</b>
 
-// Если хотите оплатить в рублях, то курс золотой короны на сегодня:
-// **1 GEL = 37.17 RUB**
+Если хотите оплатить в рублях, то курс золотой короны на сегодня:
+<b>1 GEL = 41 RUB</b>
 
-// **Как оплатить заказ:**
-// **Как получить посылку:**
+<b>Как оплатить заказ:</b>
 
-// **1) __Самовывоз из пункта выдачи:__**
-// \`проспект Акакия Церетели, 12\` (внутренний двор, помещение между 2 и 3 подъездом)
+<b>▫️ Наличными в пункте выдачи</b>
+<b>▫️ СБП:</b> +79168506929 (строго Тинькофф, Анна Ж.)
+<b>▫️ Перевод на карту TBC:</b> GE31TB7788236010100040 (Anna Zelezniakova)
 
-// **Координаты**: \`41.726578\`, \`44.788383\`
-// 📍**[Cсылка на локацию в яндекс картах](https://yandex.com.ge/maps/-/CDasmA-l)**
-// 📍**[Ссылка на локацию в гугл картах](https://maps.app.goo.gl/JzBDVGSZ6hKqaPNw8)**
+❗ <b>После оплаты отправьте нам чек / скриншот</b> 
 
-// **2) __Доставка яндекс курьером:__**
-// Если выбираете этот способ, напишите, отправим вам инструкцию по вызову курьера
+<b>Как получить посылку:</b>
 
-// **Забрать посылку самостоятельно или вызвать курьера можно:**
-// **Сегодня (24.10)** до 19:00
-// **Завтра (25.10)** с 12 до 18:00
-// **Суббота (26.10)** с 12 до 18:00
+<b>1) __Самовывоз из пункта выдачи:__</b>
+проспект Акакия Церетели, 12 (внутренний двор, помещение между 2 и 3 подъездом)
 
-// **Расписание указано на ближайшие дни, если планируете забрать в другой день - можете уточнить день/время в чате дополнительно**`
-//       break
-//     case OrderStatus.ArrivedInDestination:
-//       message = `**Здравствуйте, ваш заказ приехал в Тбилиси! 🎉**
+<b>Координаты:</b> 41.726578, 44.788383
+📍<a href="https://yandex.com.ge/maps/-/CDasmA-l"><b>Cсылка на локацию в яндекс картах</b></a>
+📍<a href="https://maps.app.goo.gl/JzBDVGSZ6hKqaPNw8"><b>Ссылка на локацию в гугл картах</b></a>
 
-// Вес посылки - **${weight} кг**
-// Стоимость доставки до Грузии:
-// **${deliveryPrice} GEL**
+<b>2) __Доставка яндекс курьером:__</b>
+Если выбираете этот способ, напишите, отправим вам инструкцию по вызову курьера
 
-// Стоимость доставки посылки в ваш город через **курьерскую службу Pony Express** составит **${ponyPrice} GEL**
+<b>Забрать посылку самостоятельно или вызвать курьера можно:</b>
+<b>Воскресенье (01.12)</b> с 12 до 16:00
+<b>Пн (02.12) - Пт (06.12)</b> с 12 до 18:00
+<b>Суббота (07.12)</b> с 12 до 16:00
+<b>Воскресенье (08.12)</b> выходной
 
-// Если хотите оплатить в рублях, то курс золотой короны на сегодня:
-// **1 GEL = 37.17 RUB**
+<b>Расписание указано на ближайшие дни, если планируете забрать в другой день - можете уточнить день/время в чате дополнительно</b>`
+      break
+    case OrderStatus.ReadyForDeliveryByPony:
+      message = `<b>Здравствуйте, ваш заказ приехал в Тбилиси! 🎉</b>
 
-// **__Оплатить заказ можно переводом на одну из карт__** 💳 (номер копируется при однократном нажатии)
+Вес посылки - <b>${weight} кг</b>
+Стоимость доставки до Грузии:
+<b>${deliveryPrice} GEL</b>
 
-// **Тинькофф**: \`2200700116194043\` (Анна Ж.)
-// **TBC**: \`GE54TB7867136010100046\` (Aleksandr Volodin)
+Стоимость доставки посылки в ваш город через <b>курьерскую службу Pony Express</b> составит <b>${ponyPrice} GEL</b>
 
-// ❗ **После оплаты отправьте нам чек / скриншот**
+Если хотите оплатить в рублях, то курс золотой короны на сегодня:
+<b>1 GEL = 41 RUB</b>
 
-// Оплатить курьера Pony Express нужно заранее, перед отправкой посылки в ваш город (по реквизитам, указанным выше)
+<b>Как оплатить заказ:</b>
 
-// Время в пути: **1-2 рабочих дня** (в выходные сервис не работает)
+<b>▫️ Наличными в пункте выдачи</b>
+<b>▫️ СБП:</b> +79168506929 (строго Тинькофф, Анна Ж.)
+<b>▫️ Перевод на карту TBC:</b> GE31TB7788236010100040 (Anna Zelezniakova)
 
-// **Напишите, пожалуйста, актуальные данные для отправки посылки:**
-// - ФИО
-// - Адрес и номер телефона получателя`
-//       break
-//   }
+❗ <b>После оплаты отправьте нам чек / скриншот</b>
 
-//   await tgClient.start({
-//     phoneNumber: async () => new Promise((resolve) => rl.question('Please enter your number: ', resolve)),
-//     password: async () => new Promise((resolve) => rl.question('Please enter your password: ', resolve)),
-//     phoneCode: async () => new Promise((resolve) => rl.question('Please enter the code you received: ', resolve)),
-//     onError: (err) => console.log(err),
-//   })
+Оплатить курьера Pony Express нужно заранее, перед отправкой посылки в ваш город (по реквизитам, указанным выше)
 
-//   tgClient.session.save()
+Время в пути: <b>1-2 рабочих дня</b> (в выходные сервис не работает)
 
-//   if (tgUsername && message) {
-//     await tgClient.invoke(
-//       new Api.messages.SetTyping({
-//         peer: await tgClient.getInputEntity(tgUsername),
-//         action: new Api.SendMessageTypingAction(),
-//       })
-//     )
+<b>Напишите, пожалуйста, актуальные данные для отправки посылки:</b>
+- ФИО
+- Адрес и номер телефона получателя`
+      break
+  }
 
-//     await setTimeout(1000)
-//     await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'markdown' })
-//   }
-// }
+  await tgClient.start({
+    phoneNumber: async () => new Promise((resolve) => rl.question('Please enter your number: ', resolve)),
+    password: async () => new Promise((resolve) => rl.question('Please enter your password: ', resolve)),
+    phoneCode: async () => new Promise((resolve) => rl.question('Please enter the code you received: ', resolve)),
+    onError: (err) => console.log(err),
+  })
+
+  tgClient.session.save()
+
+  if (tgUsername && message) {
+    await tgClient.invoke(
+      new Api.messages.SetTyping({
+        peer: await tgClient.getInputEntity(tgUsername),
+        action: new Api.SendMessageTypingAction(),
+      })
+    )
+
+    await setTimeout(1000)
+    await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'html' })
+  }
+}
