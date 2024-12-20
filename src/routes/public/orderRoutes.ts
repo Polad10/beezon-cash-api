@@ -1,5 +1,5 @@
 import express from 'express'
-import { order, PrismaClient, user } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
@@ -11,14 +11,9 @@ import { sendStageUpdateMessage } from '../../utils/telegram'
 const prisma = new PrismaClient()
 const router = express.Router()
 
-interface userOrderType {
-  user: user
-  order: order
-}
-
 router.post('/', async (req, res, next) => {
   try {
-    const { user, order }: userOrderType = await prisma.$transaction(async (prisma: any) => {
+    const { user, order } = await prisma.$transaction(async (prisma: any) => {
       const inviter = req.body.invite_code
         ? await prisma.user.findFirst({
             where: {
