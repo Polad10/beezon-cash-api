@@ -12,7 +12,7 @@ import fs from 'fs'
 
 const tgApiId = Number(process.env.TG_API_ID)
 const tgApiHash = String(process.env.TG_API_HASH)
-const sessionFile = 'session.txt'
+const sessionFile = 'data/session.txt'
 const stringSession = new StringSession(fs.existsSync(sessionFile) ? fs.readFileSync(sessionFile).toString() : '')
 
 const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
