@@ -3,6 +3,7 @@ import httpStatusCodes from '../constants/httpStatusCodes'
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
+import { sendBonusAppliedMessage } from '../utils/telegram'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -96,6 +97,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
       }),
     ])
 
+    sendBonusAppliedMessage(updatedUser.tg_username, updatedOrder.code, updatedOrder.current_price)
     res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
   } catch (ex) {
     next(ex)

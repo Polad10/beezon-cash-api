@@ -9,7 +9,10 @@ import { log } from './log'
 import { randomUUID } from 'crypto'
 import { LogLevel } from '../models/log.model'
 import fs from 'fs'
+import { PrismaClient } from '@prisma/client'
+import Handlebars from 'handlebars'
 
+const prisma = new PrismaClient()
 const tgApiId = Number(process.env.TG_API_ID)
 const tgApiHash = String(process.env.TG_API_HASH)
 const sessionFile = 'data/session.txt'
@@ -44,99 +47,36 @@ export async function sendStageUpdateMessage(
   ponyPrice: Decimal
 ) {
   try {
-    let message = ''
+    let message: string | undefined = undefined
 
-    switch (orderStatus) {
-      case OrderStatus.New:
-        message = `<b>Ваш заказ #${orderCode} принят!</b>
-  
-  Когда у всех ваших товаров будет статус <b>Готов к выдаче</b>, отправляйте нам данные для получения посылки прямо в этот чат
-  
-  Даты отправок из Владикавказа мы публикуем <a href="https://t.me/beezon_logistic/234"><b>здесь</b></a>
-  
-  <b>ВАЖНО:</b>
-  Курьеры могут снять заводскую упаковку товаров для упрощения прохождения таможни. Если для каких-либо товаров важно сохранить упаковку, укажите это при отправке штрих-кода
-  
-  <b>P.S. Если будут вопросы - пишите, мы всегда на связи</b> 💙`
-        break
-      case OrderStatus.ReadyForDeliveryInTbilisi:
-        message = `<b>Здравствуйте, ваш заказ приехал в Тбилиси! 🎉</b>
-  
-  Вес посылки - <b>${weight} кг</b>
-  Стоимость доставки до Грузии:
-  <b>${deliveryPrice} GEL</b>
-  
-  Если хотите оплатить в рублях, то курс золотой короны на сегодня:
-  <b>1 GEL = 41 RUB</b>
-  
-  <b>Как оплатить заказ:</b>
-  
-  <b>▫️ Наличными в пункте выдачи</b>
-  <b>▫️ СБП:</b> +79168506929 (строго Тинькофф, Анна Ж.)
-  <b>▫️ Перевод на карту TBC:</b> GE31TB7788236010100040 (Anna Zelezniakova)
-  
-  ❗ <b>После оплаты отправьте нам чек / скриншот</b> 
-  
-  <b>Как получить посылку:</b>
-  
-  <b>1) __Самовывоз из пункта выдачи:__</b>
-  проспект Акакия Церетели, 12 (внутренний двор, помещение между 2 и 3 подъездом)
-  
-  <b>Координаты:</b> 41.726578, 44.788383
-  📍<a href="https://yandex.com.ge/maps/-/CDasmA-l"><b>Cсылка на локацию в яндекс картах</b></a>
-  📍<a href="https://maps.app.goo.gl/JzBDVGSZ6hKqaPNw8"><b>Ссылка на локацию в гугл картах</b></a>
-  
-  <b>2) __Доставка яндекс курьером:__</b>
-  Если выбираете этот способ, напишите, отправим вам инструкцию по вызову курьера
-  
-  <b>Забрать посылку самостоятельно или вызвать курьера можно:</b>
-  <b>Воскресенье (01.12)</b> с 12 до 16:00
-  <b>Пн (02.12) - Пт (06.12)</b> с 12 до 18:00
-  <b>Суббота (07.12)</b> с 12 до 16:00
-  <b>Воскресенье (08.12)</b> выходной
-  
-  <b>Расписание указано на ближайшие дни, если планируете забрать в другой день - можете уточнить день/время в чате дополнительно</b>`
-        break
-      case OrderStatus.ReadyForDeliveryByPony:
-        message = `<b>Здравствуйте, ваш заказ приехал в Тбилиси! 🎉</b>
-  
-  Вес посылки - <b>${weight} кг</b>
-  Стоимость доставки до Грузии:
-  <b>${deliveryPrice} GEL</b>
-  
-  Стоимость доставки посылки в ваш город через <b>курьерскую службу Pony Express</b> составит <b>${ponyPrice} GEL</b>
-  
-  Если хотите оплатить в рублях, то курс золотой короны на сегодня:
-  <b>1 GEL = 41 RUB</b>
-  
-  <b>Как оплатить заказ:</b>
-  
-  <b>▫️ Наличными в пункте выдачи</b>
-  <b>▫️ СБП:</b> +79168506929 (строго Тинькофф, Анна Ж.)
-  <b>▫️ Перевод на карту TBC:</b> GE31TB7788236010100040 (Anna Zelezniakova)
-  
-  ❗ <b>После оплаты отправьте нам чек / скриншот</b>
-  
-  Оплатить курьера Pony Express нужно заранее, перед отправкой посылки в ваш город (по реквизитам, указанным выше)
-  
-  Время в пути: <b>1-2 рабочих дня</b> (в выходные сервис не работает)
-  
-  <b>Напишите, пожалуйста, актуальные данные для отправки посылки:</b>
-  - ФИО
-  - Адрес и номер телефона получателя`
-        break
+    if (orderStatus == OrderStatus.New) {
+      const templateText = (await prisma.message.findUnique({ where: { order_status: OrderStatus.New } }))?.text
+      const template = Handlebars.compile(templateText)
+      message = template({ orderCode: orderCode })
+    } else if (orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
+      const templateText = (
+        await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryInTbilisi } })
+      )?.text
+      const template = Handlebars.compile(templateText)
+      message = template({ weight: weight, deliveryPrice: deliveryPrice })
+    } else if (orderStatus == OrderStatus.ReadyForDeliveryByPony) {
+      const templateText = (
+        await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryByPony } })
+      )?.text
+      const template = Handlebars.compile(templateText)
+      message = template({ weight: weight, deliveryPrice: deliveryPrice, ponyPrice: ponyPrice })
     }
 
-    if (tgUsername && message) {
-      await tgClient.invoke(
-        new Api.messages.SetTyping({
-          peer: await tgClient.getInputEntity(tgUsername),
-          action: new Api.SendMessageTypingAction(),
-        })
-      )
+    if (message) {
+      await sendMessage(tgUsername, message, orderCode)
+    } else {
+      const extra = {
+        tgUsername,
+        orderCode,
+        orderStatus,
+      }
 
-      await setTimeout(1000)
-      await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'html', linkPreview: false })
+      await log(randomUUID(), LogLevel.ERROR, `No message found for stage ${orderStatus}`, extra)
     }
   } catch (ex) {
     const extra = {
@@ -145,6 +85,34 @@ export async function sendStageUpdateMessage(
       orderStatus,
       exception: ex,
     }
-    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a notification.", extra)
+
+    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
   }
+}
+
+export async function sendBonusAppliedMessage(tgUsername: string, orderCode: number, newPrice: Decimal) {
+  try {
+    const message = `Бонусные баллы применены для заказа #${orderCode}! Новая стоимость доставки: ${newPrice} ₾`
+    await sendMessage(tgUsername, message, orderCode)
+  } catch (ex) {
+    const extra = {
+      tgUsername,
+      orderCode,
+      exception: ex,
+    }
+
+    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
+  }
+}
+
+async function sendMessage(tgUsername: string, message: string, orderCode: number) {
+  await tgClient.invoke(
+    new Api.messages.SetTyping({
+      peer: await tgClient.getInputEntity(tgUsername),
+      action: new Api.SendMessageTypingAction(),
+    })
+  )
+
+  await setTimeout(1000)
+  await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'html', linkPreview: false })
 }
