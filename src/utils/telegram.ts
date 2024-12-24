@@ -69,14 +69,6 @@ export async function sendStageUpdateMessage(
 
     if (message) {
       await sendMessage(tgUsername, message, orderCode)
-    } else {
-      const extra = {
-        tgUsername,
-        orderCode,
-        orderStatus,
-      }
-
-      await log(randomUUID(), LogLevel.ERROR, `No message found for stage ${orderStatus}`, extra)
     }
   } catch (ex) {
     const extra = {
