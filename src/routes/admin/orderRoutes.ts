@@ -83,7 +83,7 @@ router.post('/', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const editedOrder = await prisma.$transaction(async (prisma: any) => {
+    const updatedOrder = await prisma.$transaction(async (prisma: any) => {
       const order = await prisma.order.update({
         where: {
           id: req.params.id,
@@ -124,16 +124,50 @@ router.put('/:id', async (req, res, next) => {
 
     if (req.body.send_notification) {
       sendStageUpdateMessage(
-        editedOrder.user.tg_username,
-        editedOrder.code,
-        editedOrder.status,
-        editedOrder.weight,
-        editedOrder.current_price,
-        editedOrder.partner_cost
+        updatedOrder.user.tg_username,
+        updatedOrder.code,
+        updatedOrder.status,
+        updatedOrder.weight,
+        updatedOrder.current_price,
+        updatedOrder.partner_cost
       )
     }
 
-    res.json(editedOrder)
+    res.json(updatedOrder)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
+router.patch('/:id', async (req, res, next) => {
+  try {
+    await prisma.order.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        order_status: {
+          connect: {
+            id: req.body.status,
+          },
+        },
+      },
+    })
+
+    const updatedOrder = await getOrder(prisma, req.params.id)
+
+    if (req.body.send_notification) {
+      sendStageUpdateMessage(
+        updatedOrder.user.tg_username,
+        updatedOrder.code,
+        updatedOrder.status,
+        updatedOrder.weight,
+        updatedOrder.current_price,
+        updatedOrder.partner_cost
+      )
+    }
+
+    res.json(updatedOrder)
   } catch (ex) {
     next(ex)
   }
