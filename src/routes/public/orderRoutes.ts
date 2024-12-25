@@ -69,14 +69,14 @@ router.post('/', async (req, res, next) => {
       return { user, order }
     })
 
-    sendStageUpdateMessage(
-      user.tg_username,
-      order.code,
-      order.status,
-      order.weight,
-      order.current_price,
-      order.partner_cost
-    )
+    sendStageUpdateMessage({
+      tgUsername: user.user.tg_username,
+      orderCode: order.code,
+      orderStatus: order.status,
+      weight: order.weight,
+      deliveryPrice: order.current_price,
+      ponyPrice: order.partner_cost,
+    })
 
     res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {

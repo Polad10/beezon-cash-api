@@ -11,6 +11,8 @@ import { LogLevel } from '../models/log.model'
 import fs from 'fs'
 import { PrismaClient } from '@prisma/client'
 import Handlebars from 'handlebars'
+import { OrderRecepient } from '../models/OrderRecepient'
+import { delay } from './delay'
 
 const prisma = new PrismaClient()
 const tgApiId = Number(process.env.TG_API_ID)
@@ -38,43 +40,47 @@ tgClient
     fs.writeFileSync(sessionFile, stringSession.save())
   })
 
-export async function sendStageUpdateMessage(
-  tgUsername: string,
-  orderCode: number,
-  orderStatus: OrderStatus,
-  weight: Decimal,
-  deliveryPrice: Decimal,
-  ponyPrice: Decimal
-) {
+export async function sendStageUpdateMessages(orderRecepients: OrderRecepient[]) {
+  for (const orderRecepient of orderRecepients) {
+    await sendStageUpdateMessage(orderRecepient)
+    await delay(5000)
+  }
+}
+
+export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
   try {
     let message: string | undefined = undefined
 
-    if (orderStatus == OrderStatus.New) {
+    if (orderRecepient.orderStatus == OrderStatus.New) {
       const templateText = (await prisma.message.findUnique({ where: { order_status: OrderStatus.New } }))?.text
       const template = Handlebars.compile(templateText)
-      message = template({ orderCode: orderCode })
-    } else if (orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
+      message = template({ orderCode: orderRecepient.orderCode })
+    } else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
       const templateText = (
         await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryInTbilisi } })
       )?.text
       const template = Handlebars.compile(templateText)
-      message = template({ weight: weight, deliveryPrice: deliveryPrice })
-    } else if (orderStatus == OrderStatus.ReadyForDeliveryByPony) {
+      message = template({ weight: orderRecepient.weight, deliveryPrice: orderRecepient.deliveryPrice })
+    } else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryByPony) {
       const templateText = (
         await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryByPony } })
       )?.text
       const template = Handlebars.compile(templateText)
-      message = template({ weight: weight, deliveryPrice: deliveryPrice, ponyPrice: ponyPrice })
+      message = template({
+        weight: orderRecepient.weight,
+        deliveryPrice: orderRecepient.deliveryPrice,
+        ponyPrice: orderRecepient.ponyPrice,
+      })
     }
 
     if (message) {
-      await sendMessage(tgUsername, message, orderCode)
+      await sendMessage(orderRecepient.tgUsername, message, orderRecepient.orderCode)
     }
   } catch (ex) {
     const extra = {
-      tgUsername,
-      orderCode,
-      orderStatus,
+      tgUsername: orderRecepient.tgUsername,
+      orderCode: orderRecepient.orderCode,
+      orderStatus: orderRecepient.orderStatus,
       exception: ex,
     }
 

@@ -5,7 +5,10 @@ import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
 import { City } from '../../enums/City'
-import { sendStageUpdateMessage } from '../../utils/telegram'
+import { sendStageUpdateMessage, sendStageUpdateMessages } from '../../utils/telegram'
+import { OrderStatus } from '../../enums/OrderStatus'
+import { OrderRecepient } from '../../models/OrderRecepient'
+import { Order } from '../../models/Order'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -65,14 +68,14 @@ router.post('/', async (req, res, next) => {
     })
 
     if (req.body.send_notification) {
-      sendStageUpdateMessage(
-        createdOrder.user.tg_username,
-        createdOrder.code,
-        createdOrder.status,
-        createdOrder.weight,
-        createdOrder.current_price,
-        createdOrder.partner_cost
-      )
+      sendStageUpdateMessage({
+        tgUsername: createdOrder.user.tg_username,
+        orderCode: createdOrder.code,
+        orderStatus: createdOrder.status,
+        weight: createdOrder.weight,
+        deliveryPrice: createdOrder.current_price,
+        ponyPrice: createdOrder.partner_cost,
+      })
     }
 
     res.json(createdOrder)
@@ -123,14 +126,14 @@ router.put('/:id', async (req, res, next) => {
     })
 
     if (req.body.send_notification) {
-      sendStageUpdateMessage(
-        updatedOrder.user.tg_username,
-        updatedOrder.code,
-        updatedOrder.status,
-        updatedOrder.weight,
-        updatedOrder.current_price,
-        updatedOrder.partner_cost
-      )
+      sendStageUpdateMessage({
+        tgUsername: updatedOrder.user.tg_username,
+        orderCode: updatedOrder.code,
+        orderStatus: updatedOrder.status,
+        weight: updatedOrder.weight,
+        deliveryPrice: updatedOrder.current_price,
+        ponyPrice: updatedOrder.partner_cost,
+      })
     }
 
     res.json(updatedOrder)
@@ -157,17 +160,62 @@ router.patch('/:id', async (req, res, next) => {
     const updatedOrder = await getOrder(prisma, req.params.id)
 
     if (req.body.send_notification) {
-      sendStageUpdateMessage(
-        updatedOrder.user.tg_username,
-        updatedOrder.code,
-        updatedOrder.status,
-        updatedOrder.weight,
-        updatedOrder.current_price,
-        updatedOrder.partner_cost
-      )
+      sendStageUpdateMessage({
+        tgUsername: updatedOrder.user.tg_username,
+        orderCode: updatedOrder.code,
+        orderStatus: updatedOrder.status,
+        weight: updatedOrder.weight,
+        deliveryPrice: updatedOrder.current_price,
+        ponyPrice: updatedOrder.partner_cost,
+      })
     }
 
     res.json(updatedOrder)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
+router.patch('/', async (req, res, next) => {
+  try {
+    const patches: { id: string; status: OrderStatus }[] = req.body.patches
+
+    await prisma.$transaction(
+      patches.map((patch) =>
+        prisma.order.update({
+          where: {
+            id: patch.id,
+          },
+          data: {
+            order_status: {
+              connect: {
+                id: patch.status,
+              },
+            },
+          },
+        })
+      )
+    )
+
+    const updatedOrders = await getOrders(
+      prisma,
+      patches.map((patch) => patch.id)
+    )
+
+    if (req.body.send_notification) {
+      const orderRecepients: OrderRecepient[] = updatedOrders.map((order: Order) => ({
+        tgUsername: order.user!.tg_username,
+        orderCode: order.code,
+        orderStatus: order.status,
+        weight: order.weight,
+        deliveryPrice: order.current_price,
+        ponyPrice: order.partner_cost,
+      }))
+
+      sendStageUpdateMessages(orderRecepients)
+    }
+
+    res.json(updatedOrders)
   } catch (ex) {
     next(ex)
   }
@@ -232,6 +280,21 @@ async function getOrder(prisma: any, id: string) {
   return await prisma.order.findUnique({
     where: {
       id: id,
+    },
+    include: {
+      user: true,
+      order_type_mappings: true,
+      order_tracks: true,
+    },
+  })
+}
+
+async function getOrders(prisma: any, ids: string[]) {
+  return await prisma.order.findMany({
+    where: {
+      id: {
+        in: ids,
+      },
     },
     include: {
       user: true,
