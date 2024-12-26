@@ -8,6 +8,7 @@ async function main() {
   await fillOrderStatusTable()
   await fillOrderTypeTable()
   await fillMessageTable()
+  await fillTransactionTypeTable()
 }
 
 async function fillCityTable() {
@@ -352,6 +353,30 @@ async function fillMessageTable() {
 - ФИО
 - Адрес и номер телефона получателя`,
       order_status: OrderStatus.ReadyForDeliveryByPony,
+    },
+  })
+}
+
+async function fillTransactionTypeTable() {
+  await prisma.transaction_type.upsert({
+    where: {
+      name: 'Deposit',
+    },
+    update: {},
+    create: {
+      id: 0,
+      name: 'Deposit',
+    },
+  })
+
+  await prisma.transaction_type.upsert({
+    where: {
+      name: 'Withdrawal',
+    },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Withdrawal',
     },
   })
 }
