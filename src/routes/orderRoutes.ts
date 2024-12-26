@@ -4,6 +4,8 @@ import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
 import { sendBonusAppliedMessage } from '../utils/telegram'
+import { randomUUID } from 'crypto'
+import { TransactionType } from '../enums/TransactionType'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -81,21 +83,45 @@ router.post('/:orderId/bonus', async (req, res, next) => {
     const newOrderPrice = order.current_price.minus(amount)
     const newUserBalance = user.balance.minus(amount)
 
-    const [updatedOrder, updatedUser] = await prisma.$transaction([
-      prisma.order.update({
+    const [updatedOrder, updatedUser] = await prisma.$transaction(async (prisma: any) => {
+      const updatedOrder = await prisma.order.update({
         where: orderWhereClause,
         data: {
           current_price: newOrderPrice,
         },
-      }),
+      })
 
-      prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: userWhereClause,
         data: {
           balance: newUserBalance,
         },
-      }),
-    ])
+      })
+
+      await prisma.transaction.create({
+        data: {
+          id: randomUUID(),
+          amount: amount,
+          order: {
+            connect: {
+              id: updatedOrder.id,
+            },
+          },
+          user: {
+            connect: {
+              id: updatedUser.id,
+            },
+          },
+          transaction_type: {
+            connect: {
+              id: TransactionType.Withdrawal,
+            },
+          },
+        },
+      })
+
+      return [updatedOrder, updatedUser]
+    })
 
     sendBonusAppliedMessage(updatedUser.tg_username, updatedOrder.code, updatedOrder.current_price)
     res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
