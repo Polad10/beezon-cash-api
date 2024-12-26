@@ -13,6 +13,7 @@ import { PrismaClient } from '@prisma/client'
 import Handlebars from 'handlebars'
 import { OrderRecepient } from '../models/OrderRecepient'
 import { delay } from './delay'
+import { CashbackRecepient } from '../models/CashbackRecepient'
 
 const prisma = new PrismaClient()
 const tgApiId = Number(process.env.TG_API_ID)
@@ -96,6 +97,28 @@ export async function sendBonusAppliedMessage(tgUsername: string, orderCode: num
     const extra = {
       tgUsername,
       orderCode,
+      exception: ex,
+    }
+
+    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
+  }
+}
+
+export async function sendCashbackAppliedMessages(cashbackRecepients: CashbackRecepient[]) {
+  for (const cashbackRecepient of cashbackRecepients) {
+    await sendCashbackAppliedMessage(cashbackRecepient)
+    await delay(5000)
+  }
+}
+
+export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRecepient) {
+  try {
+    const message = `На ваш баланс начислен кэшбек: +${cashbackRecepient.cashback} ₾`
+    await sendMessage(cashbackRecepient.tgUsername, message, cashbackRecepient.orderCode)
+  } catch (ex) {
+    const extra = {
+      tgUsername: cashbackRecepient.tgUsername,
+      orderCode: cashbackRecepient.orderCode,
       exception: ex,
     }
 

@@ -5,10 +5,18 @@ import { randomUUID } from 'crypto'
 import { OrderTypeMapping, OrderTypeMappingRequest } from '../../models/OrderTypeMapping'
 import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
 import { City } from '../../enums/City'
-import { sendStageUpdateMessage, sendStageUpdateMessages } from '../../utils/telegram'
+import {
+  sendCashbackAppliedMessage,
+  sendCashbackAppliedMessages,
+  sendStageUpdateMessage,
+  sendStageUpdateMessages,
+} from '../../utils/telegram'
 import { OrderStatus } from '../../enums/OrderStatus'
 import { OrderRecepient } from '../../models/OrderRecepient'
 import { Order } from '../../models/Order'
+import { TransactionType } from '../../enums/TransactionType'
+import { CashbackRecepient } from '../../models/CashbackRecepient'
+import { StageResult } from '../../models/StageResult'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -30,7 +38,7 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const createdOrder = await prisma.$transaction(async (prisma: any) => {
+    const [createdOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
       const order = await prisma.order.create({
         data: {
           id: randomUUID(),
@@ -64,18 +72,29 @@ router.post('/', async (req, res, next) => {
       await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
       await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      return await getOrder(prisma, order.id)
+      const orderWithAdditionalInfo = await getOrder(prisma, order.id)
+      const stageResult = await processStage(prisma, orderWithAdditionalInfo)
+
+      return [orderWithAdditionalInfo, stageResult]
     })
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: createdOrder.user.tg_username,
+        tgUsername: createdOrder.user!.tg_username,
         orderCode: createdOrder.code,
         orderStatus: createdOrder.status,
         weight: createdOrder.weight,
         deliveryPrice: createdOrder.current_price,
         ponyPrice: createdOrder.partner_cost,
       })
+
+      if (stageResult.cashback) {
+        sendCashbackAppliedMessage({
+          tgUsername: createdOrder.user!.tg_username,
+          orderCode: createdOrder.code,
+          cashback: stageResult.cashback,
+        })
+      }
     }
 
     res.json(createdOrder)
@@ -86,7 +105,7 @@ router.post('/', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const updatedOrder = await prisma.$transaction(async (prisma: any) => {
+    const [updatedOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
       const order = await prisma.order.update({
         where: {
           id: req.params.id,
@@ -122,18 +141,29 @@ router.put('/:id', async (req, res, next) => {
       await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
       await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      return await getOrder(prisma, order.id)
+      const orderWithAdditionalInfo = await getOrder(prisma, order.id)
+      const stageResult = await processStage(prisma, orderWithAdditionalInfo)
+
+      return [orderWithAdditionalInfo, stageResult]
     })
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: updatedOrder.user.tg_username,
+        tgUsername: updatedOrder.user!.tg_username,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
         weight: updatedOrder.weight,
         deliveryPrice: updatedOrder.current_price,
         ponyPrice: updatedOrder.partner_cost,
       })
+
+      if (stageResult.cashback) {
+        sendCashbackAppliedMessage({
+          tgUsername: updatedOrder.user!.tg_username,
+          orderCode: updatedOrder.code,
+          cashback: stageResult.cashback,
+        })
+      }
     }
 
     res.json(updatedOrder)
@@ -144,30 +174,43 @@ router.put('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
   try {
-    await prisma.order.update({
-      where: {
-        id: req.params.id,
-      },
-      data: {
-        order_status: {
-          connect: {
-            id: req.body.status,
+    const [updatedOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
+      await prisma.order.update({
+        where: {
+          id: req.params.id,
+        },
+        data: {
+          order_status: {
+            connect: {
+              id: req.body.status,
+            },
           },
         },
-      },
-    })
+      })
 
-    const updatedOrder = await getOrder(prisma, req.params.id)
+      const updatedOrder = await getOrder(prisma, req.params.id)
+      const stageResult = await processStage(prisma, updatedOrder)
+
+      return [updatedOrder, stageResult]
+    })
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: updatedOrder.user.tg_username,
+        tgUsername: updatedOrder.user!.tg_username,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
         weight: updatedOrder.weight,
         deliveryPrice: updatedOrder.current_price,
         ponyPrice: updatedOrder.partner_cost,
       })
+
+      if (stageResult.cashback) {
+        sendCashbackAppliedMessage({
+          tgUsername: updatedOrder.user!.tg_username,
+          orderCode: updatedOrder.code,
+          cashback: stageResult.cashback,
+        })
+      }
     }
 
     res.json(updatedOrder)
@@ -180,27 +223,33 @@ router.patch('/', async (req, res, next) => {
   try {
     const patches: { id: string; status: OrderStatus }[] = req.body.patches
 
-    await prisma.$transaction(
-      patches.map((patch) =>
-        prisma.order.update({
-          where: {
-            id: patch.id,
-          },
-          data: {
-            order_status: {
-              connect: {
-                id: patch.status,
+    const [updatedOrders, stageResults] = await prisma.$transaction(async (prisma: any) => {
+      await Promise.all(
+        patches.map((patch) =>
+          prisma.order.update({
+            where: {
+              id: patch.id,
+            },
+            data: {
+              order_status: {
+                connect: {
+                  id: patch.status,
+                },
               },
             },
-          },
-        })
+          })
+        )
       )
-    )
 
-    const updatedOrders = await getOrders(
-      prisma,
-      patches.map((patch) => patch.id)
-    )
+      const updatedOrders = await getOrders(
+        prisma,
+        patches.map((patch) => patch.id)
+      )
+
+      const stageResults = await processStages(prisma, updatedOrders)
+
+      return [updatedOrders, stageResults]
+    })
 
     if (req.body.send_notification) {
       const orderRecepients: OrderRecepient[] = updatedOrders.map((order: Order) => ({
@@ -213,6 +262,18 @@ router.patch('/', async (req, res, next) => {
       }))
 
       sendStageUpdateMessages(orderRecepients)
+
+      const cashbackRecepients: CashbackRecepient[] = stageResults
+        .filter((result: StageResult) => result.cashback)
+        .map((result: StageResult) => {
+          return {
+            tgUsername: result.order.user!.tg_username,
+            orderCode: result.order.code,
+            cashback: result.cashback,
+          }
+        })
+
+      sendCashbackAppliedMessages(cashbackRecepients)
     }
 
     res.json(updatedOrders)
@@ -302,6 +363,77 @@ async function getOrders(prisma: any, ids: string[]) {
       order_tracks: true,
     },
   })
+}
+
+async function processStage(prisma: any, order: Order) {
+  return await processTransactions(prisma, order)
+}
+
+async function processStages(prisma: any, orders: Order[]) {
+  const results: StageResult[] = []
+
+  for (const order of orders) {
+    const result = await processTransactions(prisma, order)
+    results.push(result)
+  }
+
+  return results
+}
+
+async function processTransactions(prisma: any, order: Order) {
+  const result: StageResult = {
+    order: order,
+    cashback: null,
+  }
+
+  if (order.status == OrderStatus.Delivered) {
+    const orderTransactions = await prisma.transaction.findMany({
+      where: {
+        order_id: order.id,
+      },
+    })
+
+    if (orderTransactions.length === 0) {
+      const cashback = order.original_price.mul(0.03)
+
+      await prisma.transaction.create({
+        data: {
+          id: randomUUID(),
+          amount: cashback,
+          order: {
+            connect: {
+              id: order.id,
+            },
+          },
+          user: {
+            connect: {
+              id: order.user!.id,
+            },
+          },
+          transaction_type: {
+            connect: {
+              id: TransactionType.Deposit,
+            },
+          },
+        },
+      })
+
+      const newBalance = order.user!.balance.add(cashback)
+
+      await prisma.user.update({
+        where: {
+          id: order.user!.id,
+        },
+        data: {
+          balance: newBalance,
+        },
+      })
+
+      result.cashback = cashback
+    }
+  }
+
+  return result
 }
 
 export default router
