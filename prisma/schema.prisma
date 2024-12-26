@@ -99,15 +99,15 @@ model order_type_mapping {
 }
 
 model transaction {
-  id                   String           @id(map: "transaction_pk") @db.Uuid
-  datetime             DateTime         @default(now())
-  order_id             String?          @db.Uuid
-  user_id              String           @db.Uuid
-  transaction_type     Int
-  amount               Decimal          @db.Decimal(8, 2)
-  order                order?           @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "transaction_order_fk")
-  user                 user             @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "transaction_user_fk")
-  transaction_type_ref transaction_type @relation(fields: [transaction_type], references: [id], onDelete: Restrict, map: "transaction_type_fk")
+  id               String           @id(map: "transaction_pk") @db.Uuid
+  datetime         DateTime         @default(now())
+  order_id         String?          @db.Uuid
+  user_id          String           @db.Uuid
+  type             Int
+  amount           Decimal          @db.Decimal(8, 2)
+  order            order?           @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "transaction_order_fk")
+  user             user             @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "transaction_user_fk")
+  transaction_type transaction_type @relation(fields: [type], references: [id], onDelete: Restrict, map: "transaction_type_fk")
 }
 
 model transaction_type {
