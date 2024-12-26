@@ -72,10 +72,10 @@ router.post('/:orderId/bonus', async (req, res, next) => {
       return res.status(httpStatusCodes.badRequest).send('Bonus has already been applied for this order')
     }
 
-    const allowedDiscountAmount = order.current_price.dividedBy(2)
+    const maxAllowedDiscountAmount = order.current_price.dividedBy(4)
 
-    if (amount.greaterThan(allowedDiscountAmount)) {
-      return res.status(httpStatusCodes.badRequest).send('The amount cannot exceed 50% of the order price')
+    if (amount.greaterThan(maxAllowedDiscountAmount)) {
+      return res.status(httpStatusCodes.badRequest).send('The amount cannot exceed 25% of the order price')
     }
 
     const newOrderPrice = order.current_price.minus(amount)
