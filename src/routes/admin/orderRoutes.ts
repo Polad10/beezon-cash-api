@@ -11,11 +11,15 @@ import { Order } from '../../models/Order'
 import { TransactionType } from '../../enums/TransactionType'
 import { CashbackRecepient } from '../../models/CashbackRecepient'
 import { StageResult } from '../../models/StageResult'
-import { Notification } from '../../utils/notification'
+import {
+  sendCashbackAppliedMessage,
+  sendCashbackAppliedMessages,
+  sendStageUpdateMessage,
+  sendStageUpdateMessages,
+} from '../../utils/notification'
 
 const prisma = new PrismaClient()
 const router = express.Router()
-const notification = new Notification()
 
 router.get('/', async (req, res, next) => {
   try {
@@ -75,7 +79,7 @@ router.post('/', async (req, res, next) => {
     })
 
     if (req.body.send_notification) {
-      notification.sendStageUpdateMessage({
+      sendStageUpdateMessage({
         tgUsername: createdOrder.user!.tg_username,
         orderCode: createdOrder.code,
         orderStatus: createdOrder.status,
@@ -85,7 +89,7 @@ router.post('/', async (req, res, next) => {
       })
 
       if (stageResult.cashback) {
-        notification.sendCashbackAppliedMessage({
+        sendCashbackAppliedMessage({
           tgUsername: createdOrder.user!.tg_username,
           orderCode: createdOrder.code,
           cashback: stageResult.cashback,
@@ -144,7 +148,7 @@ router.put('/:id', async (req, res, next) => {
     })
 
     if (req.body.send_notification) {
-      notification.sendStageUpdateMessage({
+      sendStageUpdateMessage({
         tgUsername: updatedOrder.user!.tg_username,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
@@ -154,7 +158,7 @@ router.put('/:id', async (req, res, next) => {
       })
 
       if (stageResult.cashback) {
-        notification.sendCashbackAppliedMessage({
+        sendCashbackAppliedMessage({
           tgUsername: updatedOrder.user!.tg_username,
           orderCode: updatedOrder.code,
           cashback: stageResult.cashback,
@@ -191,7 +195,7 @@ router.patch('/:id', async (req, res, next) => {
     })
 
     if (req.body.send_notification) {
-      notification.sendStageUpdateMessage({
+      sendStageUpdateMessage({
         tgUsername: updatedOrder.user!.tg_username,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
@@ -201,7 +205,7 @@ router.patch('/:id', async (req, res, next) => {
       })
 
       if (stageResult.cashback) {
-        notification.sendCashbackAppliedMessage({
+        sendCashbackAppliedMessage({
           tgUsername: updatedOrder.user!.tg_username,
           orderCode: updatedOrder.code,
           cashback: stageResult.cashback,
@@ -257,7 +261,7 @@ router.patch('/', async (req, res, next) => {
         ponyPrice: order.partner_cost,
       }))
 
-      notification.sendStageUpdateMessages(orderRecepients)
+      sendStageUpdateMessages(orderRecepients)
 
       const cashbackRecepients: CashbackRecepient[] = stageResults
         .filter((result: StageResult) => result.cashback)
@@ -269,7 +273,7 @@ router.patch('/', async (req, res, next) => {
           }
         })
 
-      notification.sendCashbackAppliedMessages(cashbackRecepients)
+      sendCashbackAppliedMessages(cashbackRecepients)
     }
 
     res.json(updatedOrders)

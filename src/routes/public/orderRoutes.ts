@@ -6,11 +6,10 @@ import { OrderTrack, OrderTrackRequest } from '../../models/OrderTrack'
 import { City } from '../../enums/City'
 import { generateReferralCode } from '../../utils/referralCode'
 import httpStatusCodes from '../../constants/httpStatusCodes'
-import { Notification } from '../../utils/notification'
+import { sendStageUpdateMessage } from '../../utils/notification'
 
 const prisma = new PrismaClient()
 const router = express.Router()
-const notification = new Notification()
 
 router.post('/', async (req, res, next) => {
   try {
@@ -70,7 +69,7 @@ router.post('/', async (req, res, next) => {
       return { user, order }
     })
 
-    notification.sendStageUpdateMessage({
+    sendStageUpdateMessage({
       tgUsername: user.user.tg_username,
       orderCode: order.code,
       orderStatus: order.status,

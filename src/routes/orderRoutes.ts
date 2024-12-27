@@ -5,11 +5,10 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
 import { randomUUID } from 'crypto'
 import { TransactionType } from '../enums/TransactionType'
-import { Notification } from '../utils/notification'
+import { sendBonusAppliedMessage } from '../utils/notification'
 
 const prisma = new PrismaClient()
 const router = express.Router()
-const notification = new Notification()
 
 router.get('/', async (req, res, next) => {
   try {
@@ -124,7 +123,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
       return [updatedOrder, updatedUser]
     })
 
-    notification.sendBonusAppliedMessage(updatedUser.tg_username, updatedOrder.code, updatedOrder.current_price)
+    sendBonusAppliedMessage(updatedUser.tg_username, updatedOrder.code, updatedOrder.current_price)
     res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
   } catch (ex) {
     next(ex)
