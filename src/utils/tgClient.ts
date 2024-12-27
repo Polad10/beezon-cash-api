@@ -1,0 +1,31 @@
+import { StringSession } from 'telegram/sessions'
+import { TelegramClient } from 'telegram'
+import readline from 'readline'
+import fs from 'fs'
+
+const tgApiId = Number(process.env.TG_API_ID)
+const tgApiHash = String(process.env.TG_API_HASH)
+const sessionFile = 'data/session.txt'
+const stringSession = new StringSession(fs.existsSync(sessionFile) ? fs.readFileSync(sessionFile).toString() : '')
+
+const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
+  connectionRetries: 3,
+})
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+})
+
+tgClient
+  .start({
+    phoneNumber: async () => new Promise((resolve) => rl.question('Please enter your number: ', resolve)),
+    password: async () => new Promise((resolve) => rl.question('Please enter your password: ', resolve)),
+    phoneCode: async () => new Promise((resolve) => rl.question('Please enter the code you received: ', resolve)),
+    onError: (err) => console.log(err),
+  })
+  .then((result) => {
+    fs.writeFileSync(sessionFile, stringSession.save())
+  })
+
+export default tgClient
