@@ -18,6 +18,12 @@ router.post('/', async (req, res, next) => {
     const tgId = await getTgId(req.body.tg_username)
 
     const { user, order } = await prisma.$transaction(async (prisma: any) => {
+      let user = await prisma.user.findUnique({
+        where: {
+          tg_id: tgId,
+        },
+      })
+
       const inviter = req.body.invite_code
         ? await prisma.user.findFirst({
             where: {
@@ -29,28 +35,44 @@ router.post('/', async (req, res, next) => {
           })
         : null
 
-      const user = await prisma.user.upsert({
-        where: {
-          tg_id: tgId,
-        },
-        update: {
-          first_name: req.body.first_name,
-          last_name: req.body.last_name,
-          phone_nr: req.body.phone_nr,
-          tg_username: req.body.tg_username,
-        },
-        create: {
-          id: randomUUID(),
-          first_name: req.body.first_name,
-          last_name: req.body.last_name,
-          phone_nr: req.body.phone_nr,
-          tg_username: req.body.tg_username,
-          tg_id: tgId,
-          referral_code: generateReferralCode(),
-          invited_by: inviter ? inviter.id : null,
-          balance: inviter ? new Decimal(10) : new Decimal(5),
-        },
-      })
+      if (user) {
+        user = await prisma.user.update({
+          where: {
+            tg_id: tgId,
+          },
+          data: {
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
+            phone_nr: req.body.phone_nr,
+            tg_username: req.body.tg_username,
+          },
+        })
+      } else {
+        user = await prisma.user.create({
+          data: {
+            id: randomUUID(),
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
+            phone_nr: req.body.phone_nr,
+            tg_username: req.body.tg_username,
+            tg_id: tgId,
+            referral_code: generateReferralCode(),
+            invited_by: inviter ? inviter.id : null,
+            balance: inviter ? new Decimal(10) : new Decimal(5),
+          },
+        })
+
+        if (inviter) {
+          await prisma.pending_bonus.create({
+            data: {
+              id: randomUUID(),
+              from_user_id: user.id,
+              to_user_id: inviter.id,
+              amount: new Decimal(10),
+            },
+          })
+        }
+      }
 
       const order = await prisma.order.create({
         data: {

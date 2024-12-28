@@ -23,18 +23,33 @@ router.post('/', async (req, res, next) => {
   try {
     const tgId = await getTgId(req.body.tg_username)
 
-    const createdUser = await prisma.user.create({
-      data: {
-        id: randomUUID(),
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
-        phone_nr: req.body.phone_nr,
-        tg_username: req.body.tg_username,
-        tg_id: tgId,
-        referral_code: generateReferralCode(),
-        invited_by: req.body.invited_by,
-        balance: req.body.invited_by ? new Decimal(10) : new Decimal(5),
-      },
+    const createdUser = await prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.create({
+        data: {
+          id: randomUUID(),
+          first_name: req.body.first_name,
+          last_name: req.body.last_name,
+          phone_nr: req.body.phone_nr,
+          tg_username: req.body.tg_username,
+          tg_id: tgId,
+          referral_code: generateReferralCode(),
+          invited_by: req.body.invited_by,
+          balance: req.body.invited_by ? new Decimal(10) : new Decimal(5),
+        },
+      })
+
+      if (req.body.invited_by) {
+        await prisma.pending_bonus.create({
+          data: {
+            id: randomUUID(),
+            from_user_id: user.id,
+            to_user_id: req.body.invited_by,
+            amount: new Decimal(10),
+          },
+        })
+      }
+
+      return user
     })
 
     res.json(createdUser)
