@@ -340,6 +340,7 @@ async function processTransactions(prisma: any, order: Order) {
 
     if (orderTransactions.length === 0) {
       const cashback = order.original_price.mul(0.03)
+      const newBalance = user.balance.add(cashback)
 
       await prisma.transaction.create({
         data: {
@@ -350,8 +351,6 @@ async function processTransactions(prisma: any, order: Order) {
           type: TransactionType.Deposit,
         },
       })
-
-      const newBalance = user.balance.add(cashback)
 
       await prisma.user.update({
         where: {
@@ -368,6 +367,15 @@ async function processTransactions(prisma: any, order: Order) {
     if (user.pending_bonuses_from.length > 0) {
       const pendingBonus = user.pending_bonuses_from[0]
       const newBalance = pendingBonus.to_user.balance.add(pendingBonus.amount)
+
+      await prisma.transaction.create({
+        data: {
+          id: randomUUID(),
+          amount: pendingBonus.amount,
+          user_id: pendingBonus.to_user.id,
+          type: TransactionType.Deposit,
+        },
+      })
 
       await prisma.user.update({
         where: {
