@@ -3,25 +3,29 @@ import httpStatusCodes from '../constants/httpStatusCodes'
 import { validate, parse } from '@telegram-apps/init-data-node'
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const [authType, authData] = (req.header('authorization') || '').split(' ')
+  try {
+    const [authType, authData] = (req.header('authorization') || '').split(' ')
 
-  const token = '<tg-token>'
+    const token = '<tg-token>'
 
-  switch (authType) {
-    case 'tma':
-      try {
-        // validate(authData, token, {
-        //   expiresIn: 3600,
-        // })
+    switch (authType) {
+      case 'tma':
+        try {
+          // validate(authData, token, {
+          //   expiresIn: 3600,
+          // })
 
-        const authDataParsed = parse(authData)
-        res.locals.tgId = authDataParsed?.user?.id.toString()
+          const authDataParsed = parse(authData)
+          res.locals.tgId = authDataParsed?.user?.id.toString()
 
-        return next()
-      } catch (ex) {
+          return next()
+        } catch (ex) {
+          return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
+        }
+      default:
         return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
-      }
-    default:
-      return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
+    }
+  } catch (ex) {
+    return res.sendStatus(httpStatusCodes.internalServerError)
   }
 }
