@@ -15,7 +15,7 @@ router.get('/', async (req, res, next) => {
     const orders = await prisma.order.findMany({
       where: {
         user: {
-          tg_username: res.locals.username,
+          tg_id: res.locals.tgId,
         },
       },
     })
@@ -32,7 +32,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
     const amount = new Decimal(req.body.amount)
 
     const userWhereClause = {
-      tg_username: res.locals.username,
+      tg_id: res.locals.tgId,
     }
 
     const user = await prisma.user.findUnique({
@@ -42,7 +42,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
     const orderWhereClause = {
       id: orderId,
       user: {
-        tg_username: res.locals.username,
+        tg_id: res.locals.tgId,
       },
     }
 
@@ -123,7 +123,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
       return [updatedOrder, updatedUser]
     })
 
-    sendBonusAppliedMessage(updatedUser.tg_username, updatedOrder.code, updatedOrder.current_price)
+    sendBonusAppliedMessage(updatedUser.tg_id, updatedOrder.code, updatedOrder.current_price)
     res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
   } catch (ex) {
     next(ex)

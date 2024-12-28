@@ -1,4 +1,3 @@
-import { Api, TelegramClient } from 'telegram'
 import { setTimeout } from 'timers/promises'
 import { OrderStatus } from '../enums/OrderStatus'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -7,7 +6,6 @@ import { randomUUID } from 'crypto'
 import { LogLevel } from '../models/log.model'
 import Handlebars from 'handlebars'
 import { OrderRecepient } from '../models/OrderRecepient'
-import { delay } from './delay'
 import { CashbackRecepient } from '../models/CashbackRecepient'
 import { PrismaClient } from '@prisma/client'
 import tgClient from './tgClient'
@@ -17,7 +15,7 @@ const prisma = new PrismaClient()
 export async function sendStageUpdateMessages(orderRecepients: OrderRecepient[]) {
   for (const orderRecepient of orderRecepients) {
     await sendStageUpdateMessage(orderRecepient)
-    await delay(5000)
+    await setTimeout(5000)
   }
 }
 
@@ -48,11 +46,11 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
     }
 
     if (message) {
-      await sendMessage(orderRecepient.tgUsername, message, orderRecepient.orderCode)
+      await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
     }
   } catch (ex) {
     const extra = {
-      tgUsername: orderRecepient.tgUsername,
+      tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
       exception: ex,
@@ -62,13 +60,13 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
   }
 }
 
-export async function sendBonusAppliedMessage(tgUsername: string, orderCode: number, newPrice: Decimal) {
+export async function sendBonusAppliedMessage(tgId: string, orderCode: number, newPrice: Decimal) {
   try {
     const message = `Бонусные баллы применены для заказа #${orderCode}! Новая стоимость доставки: ${newPrice} ₾`
-    await sendMessage(tgUsername, message, orderCode)
+    await sendMessage(tgId, message, orderCode)
   } catch (ex) {
     const extra = {
-      tgUsername,
+      tgId,
       orderCode,
       exception: ex,
     }
@@ -80,17 +78,17 @@ export async function sendBonusAppliedMessage(tgUsername: string, orderCode: num
 export async function sendCashbackAppliedMessages(cashbackRecepients: CashbackRecepient[]) {
   for (const cashbackRecepient of cashbackRecepients) {
     await sendCashbackAppliedMessage(cashbackRecepient)
-    await delay(5000)
+    await setTimeout(5000)
   }
 }
 
 export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRecepient) {
   try {
     const message = `На ваш баланс начислен кэшбек: +${cashbackRecepient.cashback} ₾`
-    await sendMessage(cashbackRecepient.tgUsername, message, cashbackRecepient.orderCode)
+    await sendMessage(cashbackRecepient.tgId, message, cashbackRecepient.orderCode)
   } catch (ex) {
     const extra = {
-      tgUsername: cashbackRecepient.tgUsername,
+      tgId: cashbackRecepient.tgId,
       orderCode: cashbackRecepient.orderCode,
       exception: ex,
     }
@@ -99,14 +97,6 @@ export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRece
   }
 }
 
-export async function sendMessage(tgUsername: string, message: string, orderCode: number) {
-  await tgClient.invoke(
-    new Api.messages.SetTyping({
-      peer: await tgClient.getInputEntity(tgUsername),
-      action: new Api.SendMessageTypingAction(),
-    })
-  )
-
-  await setTimeout(1000)
-  await tgClient.sendMessage(tgUsername, { message: message, parseMode: 'html', linkPreview: false })
+export async function sendMessage(tgId: string, message: string, orderCode: number) {
+  await tgClient.sendMessage(tgId, { message: message, parseMode: 'html', linkPreview: false })
 }

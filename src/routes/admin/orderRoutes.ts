@@ -80,7 +80,7 @@ router.post('/', async (req, res, next) => {
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: createdOrder.user!.tg_username,
+        tgId: createdOrder.user!.tg_id,
         orderCode: createdOrder.code,
         orderStatus: createdOrder.status,
         weight: createdOrder.weight,
@@ -90,7 +90,7 @@ router.post('/', async (req, res, next) => {
 
       if (stageResult.cashback) {
         sendCashbackAppliedMessage({
-          tgUsername: createdOrder.user!.tg_username,
+          tgId: createdOrder.user!.tg_id,
           orderCode: createdOrder.code,
           cashback: stageResult.cashback,
         })
@@ -149,7 +149,7 @@ router.put('/:id', async (req, res, next) => {
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: updatedOrder.user!.tg_username,
+        tgId: updatedOrder.user!.tg_id,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
         weight: updatedOrder.weight,
@@ -159,7 +159,7 @@ router.put('/:id', async (req, res, next) => {
 
       if (stageResult.cashback) {
         sendCashbackAppliedMessage({
-          tgUsername: updatedOrder.user!.tg_username,
+          tgId: updatedOrder.user!.tg_id,
           orderCode: updatedOrder.code,
           cashback: stageResult.cashback,
         })
@@ -196,7 +196,7 @@ router.patch('/:id', async (req, res, next) => {
 
     if (req.body.send_notification) {
       sendStageUpdateMessage({
-        tgUsername: updatedOrder.user!.tg_username,
+        tgId: updatedOrder.user!.tg_id,
         orderCode: updatedOrder.code,
         orderStatus: updatedOrder.status,
         weight: updatedOrder.weight,
@@ -206,7 +206,7 @@ router.patch('/:id', async (req, res, next) => {
 
       if (stageResult.cashback) {
         sendCashbackAppliedMessage({
-          tgUsername: updatedOrder.user!.tg_username,
+          tgId: updatedOrder.user!.tg_id,
           orderCode: updatedOrder.code,
           cashback: stageResult.cashback,
         })
@@ -253,7 +253,7 @@ router.patch('/', async (req, res, next) => {
 
     if (req.body.send_notification) {
       const orderRecepients: OrderRecepient[] = updatedOrders.map((order: Order) => ({
-        tgUsername: order.user!.tg_username,
+        tgId: order.user!.tg_id,
         orderCode: order.code,
         orderStatus: order.status,
         weight: order.weight,
@@ -267,7 +267,7 @@ router.patch('/', async (req, res, next) => {
         .filter((result: StageResult) => result.cashback)
         .map((result: StageResult) => {
           return {
-            tgUsername: result.order.user!.tg_username,
+            tgId: result.order.user!.tg_id,
             orderCode: result.order.code,
             cashback: result.cashback,
           }

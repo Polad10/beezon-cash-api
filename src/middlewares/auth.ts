@@ -15,7 +15,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
         // })
 
         const authDataParsed = parse(authData)
-        res.locals.username = authDataParsed?.user?.username
+        res.locals.tgId = authDataParsed?.user?.id.toString()
+
         return next()
       } catch (ex) {
         return res.status(httpStatusCodes.unauthorized).send('Unauthorized')

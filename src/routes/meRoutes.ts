@@ -9,7 +9,7 @@ router.get('/', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        tg_username: res.locals.username,
+        tg_id: res.locals.tgId,
       },
     })
 

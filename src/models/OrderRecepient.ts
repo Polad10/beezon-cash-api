@@ -2,7 +2,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
 
 export interface OrderRecepient {
-  tgUsername: string
+  tgId: string
   orderCode: number
   orderStatus: OrderStatus
   weight: Decimal
