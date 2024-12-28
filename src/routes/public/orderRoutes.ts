@@ -7,6 +7,8 @@ import { City } from '../../enums/City'
 import { generateReferralCode } from '../../utils/referralCode'
 import httpStatusCodes from '../../constants/httpStatusCodes'
 import { sendStageUpdateMessage } from '../../utils/notification'
+import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
+import { recreateOrderTracks } from '../../utils/orderTrack'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -83,46 +85,5 @@ router.post('/', async (req, res, next) => {
     next(ex)
   }
 })
-
-async function recreateOrderTypeMappings(
-  prisma: any,
-  orderTypeMappingRequests: OrderTypeMappingRequest[],
-  orderId: string
-) {
-  await prisma.order_type_mapping.deleteMany({
-    where: {
-      order_id: orderId,
-    },
-  })
-
-  const orderTypeMappings: OrderTypeMapping[] = orderTypeMappingRequests.map((req) => ({
-    id: randomUUID(),
-    order_id: orderId,
-    order_type: req.order_type,
-  }))
-
-  await prisma.order_type_mapping.createMany({
-    data: orderTypeMappings,
-  })
-}
-
-async function recreateOrderTracks(prisma: any, orderTrackRequests: OrderTrackRequest[], orderId: string) {
-  await prisma.order_track.deleteMany({
-    where: {
-      order_id: orderId,
-    },
-  })
-
-  const orderTracks: OrderTrack[] = orderTrackRequests.map((req) => ({
-    id: randomUUID(),
-    order_id: orderId,
-    delivery_provider: req.delivery_provider,
-    track_number: req.track_number,
-  }))
-
-  await prisma.order_track.createMany({
-    data: orderTracks,
-  })
-}
 
 export default router
