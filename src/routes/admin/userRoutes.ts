@@ -23,7 +23,7 @@ router.post('/', async (req, res, next) => {
   try {
     const tgId = await getTgId(req.body.tg_username)
 
-    const createdUser = await prisma.$transaction(async (prisma) => {
+    const createdUser = await prisma.$transaction(async (prisma: any) => {
       const user = await prisma.user.create({
         data: {
           id: randomUUID(),
