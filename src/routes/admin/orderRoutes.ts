@@ -51,21 +51,9 @@ router.post('/', async (req, res, next) => {
           current_price: req.body.current_price,
           partner_cost: req.body.partner_cost,
           description: req.body.description,
-          user: {
-            connect: {
-              id: req.body.user_id,
-            },
-          },
-          order_status: {
-            connect: {
-              id: req.body.status,
-            },
-          },
-          order_city: {
-            connect: {
-              id: req.body.city || City.Other,
-            },
-          },
+          user_id: req.body.user_id,
+          status: req.body.status,
+          city: req.body.city || City.Other,
         },
       })
 
@@ -120,21 +108,9 @@ router.put('/:id', async (req, res, next) => {
           current_price: req.body.current_price,
           partner_cost: req.body.partner_cost,
           description: req.body.description,
-          user: {
-            connect: {
-              id: req.body.user_id,
-            },
-          },
-          order_status: {
-            connect: {
-              id: req.body.status,
-            },
-          },
-          order_city: {
-            connect: {
-              id: req.body.city,
-            },
-          },
+          user_id: req.body.user_id,
+          status: req.body.status,
+          city: req.body.city,
         },
       })
 
@@ -180,11 +156,7 @@ router.patch('/:id', async (req, res, next) => {
           id: req.params.id,
         },
         data: {
-          order_status: {
-            connect: {
-              id: req.body.status,
-            },
-          },
+          status: req.body.status,
         },
       })
 
@@ -231,11 +203,7 @@ router.patch('/', async (req, res, next) => {
               id: patch.id,
             },
             data: {
-              order_status: {
-                connect: {
-                  id: patch.status,
-                },
-              },
+              status: patch.status,
             },
           })
         )
@@ -359,21 +327,9 @@ async function processTransactions(prisma: any, order: Order) {
         data: {
           id: randomUUID(),
           amount: cashback,
-          order: {
-            connect: {
-              id: order.id,
-            },
-          },
-          user: {
-            connect: {
-              id: order.user!.id,
-            },
-          },
-          transaction_type: {
-            connect: {
-              id: TransactionType.Deposit,
-            },
-          },
+          order_id: order.id,
+          user_id: order.user!.id,
+          type: TransactionType.Deposit,
         },
       })
 

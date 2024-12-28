@@ -46,7 +46,7 @@ router.post('/', async (req, res, next) => {
           tg_username: req.body.tg_username,
           tg_id: tgId,
           referral_code: generateReferralCode(),
-          inviter: inviter ? { connect: { id: inviter.id } } : undefined,
+          invited_by: inviter ? inviter.id : null,
         },
       })
 
@@ -55,16 +55,8 @@ router.post('/', async (req, res, next) => {
           id: randomUUID(),
           date: req.body.date,
           description: req.body.description,
-          user: {
-            connect: {
-              id: user.id,
-            },
-          },
-          order_city: {
-            connect: {
-              id: req.body.city || City.Other,
-            },
-          },
+          user_id: user.id,
+          city: req.body.city || City.Other,
         },
       })
 

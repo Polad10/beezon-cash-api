@@ -102,21 +102,9 @@ router.post('/:orderId/bonus', async (req, res, next) => {
         data: {
           id: randomUUID(),
           amount: amount,
-          order: {
-            connect: {
-              id: updatedOrder.id,
-            },
-          },
-          user: {
-            connect: {
-              id: updatedUser.id,
-            },
-          },
-          transaction_type: {
-            connect: {
-              id: TransactionType.Withdrawal,
-            },
-          },
+          order_id: updatedOrder.id,
+          user_id: updatedUser.id,
+          type: TransactionType.Withdrawal,
         },
       })
 
