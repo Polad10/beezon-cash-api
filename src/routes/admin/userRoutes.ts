@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { generateReferralCode } from '../../utils/referralCode'
 import { getTgId } from '../../utils/telegram'
+import { Decimal } from '@prisma/client/runtime/library'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -24,10 +25,15 @@ router.post('/', async (req, res, next) => {
 
     const createdUser = await prisma.user.create({
       data: {
-        ...req.body,
         id: randomUUID(),
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        phone_nr: req.body.phone_nr,
+        tg_username: req.body.tg_username,
         tg_id: tgId,
         referral_code: generateReferralCode(),
+        invited_by: req.body.invited_by,
+        balance: req.body.invited_by ? new Decimal(10) : new Decimal(5),
       },
     })
 

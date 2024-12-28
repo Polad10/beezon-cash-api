@@ -8,6 +8,7 @@ import { sendStageUpdateMessage } from '../../utils/notification'
 import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
 import { recreateOrderTracks } from '../../utils/orderTrack'
 import { getTgId } from '../../utils/telegram'
+import { Decimal } from '@prisma/client/runtime/library'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -47,6 +48,7 @@ router.post('/', async (req, res, next) => {
           tg_id: tgId,
           referral_code: generateReferralCode(),
           invited_by: inviter ? inviter.id : null,
+          balance: inviter ? new Decimal(10) : new Decimal(5),
         },
       })
 
