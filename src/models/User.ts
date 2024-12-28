@@ -1,4 +1,5 @@
 import { Decimal } from '@prisma/client/runtime/library'
+import { PendingBonus } from './PendingBonus'
 
 export interface User {
   id: string
@@ -10,4 +11,6 @@ export interface User {
   referral_code: string
   invited_by: string | null
   balance: Decimal
+  pending_bonuses_from: PendingBonus[]
+  pending_bonuses_to: PendingBonus[]
 }

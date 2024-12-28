@@ -2,6 +2,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { Order } from './Order'
 
 export interface StageResult {
-  order: Order
+  tgId: string
+  orderCode: number
   cashback: Decimal | null
 }

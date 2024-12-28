@@ -17,6 +17,7 @@ import {
 } from '../../utils/notification'
 import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
 import { recreateOrderTracks } from '../../utils/orderTrack'
+import { User } from '../../models/User'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -60,10 +61,10 @@ router.post('/', async (req, res, next) => {
       await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
       await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      const orderWithAdditionalInfo = await getOrder(prisma, order.id)
-      const stageResult = await processStage(prisma, orderWithAdditionalInfo)
+      const stageResult = await processStage(prisma, order)
+      const createdOrder = await getOrder(prisma, order.id)
 
-      return [orderWithAdditionalInfo, stageResult]
+      return [createdOrder, stageResult]
     })
 
     if (req.body.send_notification) {
@@ -117,10 +118,10 @@ router.put('/:id', async (req, res, next) => {
       await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
       await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
 
-      const orderWithAdditionalInfo = await getOrder(prisma, order.id)
-      const stageResult = await processStage(prisma, orderWithAdditionalInfo)
+      const stageResult = await processStage(prisma, order)
+      const updatedOrder = await getOrder(prisma, order.id)
 
-      return [orderWithAdditionalInfo, stageResult]
+      return [updatedOrder, stageResult]
     })
 
     if (req.body.send_notification) {
@@ -151,7 +152,7 @@ router.put('/:id', async (req, res, next) => {
 router.patch('/:id', async (req, res, next) => {
   try {
     const [updatedOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: {
           id: req.params.id,
         },
@@ -160,8 +161,8 @@ router.patch('/:id', async (req, res, next) => {
         },
       })
 
+      const stageResult = await processStage(prisma, order)
       const updatedOrder = await getOrder(prisma, req.params.id)
-      const stageResult = await processStage(prisma, updatedOrder)
 
       return [updatedOrder, stageResult]
     })
@@ -178,8 +179,8 @@ router.patch('/:id', async (req, res, next) => {
 
       if (stageResult.cashback) {
         sendCashbackAppliedMessage({
-          tgId: updatedOrder.user!.tg_id,
-          orderCode: updatedOrder.code,
+          tgId: stageResult.tg_id,
+          orderCode: stageResult.orderCode,
           cashback: stageResult.cashback,
         })
       }
@@ -196,7 +197,7 @@ router.patch('/', async (req, res, next) => {
     const patches: { id: string; status: OrderStatus }[] = req.body.patches
 
     const [updatedOrders, stageResults] = await prisma.$transaction(async (prisma: any) => {
-      await Promise.all(
+      const orders = await Promise.all(
         patches.map((patch) =>
           prisma.order.update({
             where: {
@@ -209,12 +210,12 @@ router.patch('/', async (req, res, next) => {
         )
       )
 
+      const stageResults = await processStages(prisma, orders)
+
       const updatedOrders = await getOrders(
         prisma,
         patches.map((patch) => patch.id)
       )
-
-      const stageResults = await processStages(prisma, updatedOrders)
 
       return [updatedOrders, stageResults]
     })
@@ -235,8 +236,8 @@ router.patch('/', async (req, res, next) => {
         .filter((result: StageResult) => result.cashback)
         .map((result: StageResult) => {
           return {
-            tgId: result.order.user!.tg_id,
-            orderCode: result.order.code,
+            tgId: result.tgId,
+            orderCode: result.orderCode,
             cashback: result.cashback,
           }
         })
@@ -301,24 +302,41 @@ async function processStages(prisma: any, orders: Order[]) {
 
   for (const order of orders) {
     const result = await processTransactions(prisma, order)
-    results.push(result)
+
+    if (result) {
+      results.push(result)
+    }
   }
 
   return results
 }
 
 async function processTransactions(prisma: any, order: Order) {
-  const result: StageResult = {
-    order: order,
-    cashback: null,
-  }
-
   if (order.status == OrderStatus.Delivered) {
     const orderTransactions = await prisma.transaction.findMany({
       where: {
         order_id: order.id,
       },
     })
+
+    const user: User = await prisma.user.findUnique({
+      where: {
+        id: order.user_id,
+      },
+      include: {
+        pending_bonuses_from: {
+          include: {
+            to_user: true,
+          },
+        },
+      },
+    })
+
+    const result: StageResult = {
+      tgId: user.tg_id,
+      orderCode: order.code,
+      cashback: null,
+    }
 
     if (orderTransactions.length === 0) {
       const cashback = order.original_price.mul(0.03)
@@ -328,16 +346,16 @@ async function processTransactions(prisma: any, order: Order) {
           id: randomUUID(),
           amount: cashback,
           order_id: order.id,
-          user_id: order.user!.id,
+          user_id: order.user_id,
           type: TransactionType.Deposit,
         },
       })
 
-      const newBalance = order.user!.balance.add(cashback)
+      const newBalance = user.balance.add(cashback)
 
       await prisma.user.update({
         where: {
-          id: order.user!.id,
+          id: order.user_id,
         },
         data: {
           balance: newBalance,
@@ -346,9 +364,29 @@ async function processTransactions(prisma: any, order: Order) {
 
       result.cashback = cashback
     }
-  }
 
-  return result
+    if (user.pending_bonuses_from.length > 0) {
+      const pendingBonus = user.pending_bonuses_from[0]
+      const newBalance = pendingBonus.to_user.balance.add(pendingBonus.amount)
+
+      await prisma.user.update({
+        where: {
+          id: pendingBonus.to_user_id,
+        },
+        data: {
+          balance: newBalance,
+        },
+      })
+
+      await prisma.pending_bonus.delete({
+        where: {
+          id: pendingBonus.id,
+        },
+      })
+    }
+
+    return result
+  }
 }
 
 export default router
