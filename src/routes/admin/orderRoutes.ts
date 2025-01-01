@@ -77,7 +77,7 @@ router.post('/', async (req, res, next) => {
         ponyPrice: createdOrder.partner_cost,
       })
 
-      if (stageResult.cashback) {
+      if (stageResult?.cashback) {
         sendCashbackAppliedMessage({
           tgId: createdOrder.user!.tg_id,
           orderCode: createdOrder.code,
@@ -134,7 +134,7 @@ router.put('/:id', async (req, res, next) => {
         ponyPrice: updatedOrder.partner_cost,
       })
 
-      if (stageResult.cashback) {
+      if (stageResult?.cashback) {
         sendCashbackAppliedMessage({
           tgId: updatedOrder.user!.tg_id,
           orderCode: updatedOrder.code,
@@ -177,7 +177,7 @@ router.patch('/:id', async (req, res, next) => {
         ponyPrice: updatedOrder.partner_cost,
       })
 
-      if (stageResult.cashback) {
+      if (stageResult?.cashback) {
         sendCashbackAppliedMessage({
           tgId: stageResult.tg_id,
           orderCode: stageResult.orderCode,
@@ -349,6 +349,15 @@ async function processTransactions(prisma: any, order: Order) {
           order_id: order.id,
           user_id: order.user_id,
           type: TransactionType.Deposit,
+        },
+      })
+
+      await prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          bonus_received: cashback,
         },
       })
 
