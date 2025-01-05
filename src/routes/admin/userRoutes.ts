@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto'
 import { generateReferralCode } from '../../utils/referralCode'
 import { getTgId } from '../../utils/telegram'
 import { Decimal } from '@prisma/client/runtime/library'
+import { TransactionType } from '../../enums/TransactionType'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -24,6 +25,8 @@ router.post('/', async (req, res, next) => {
     const tgId = await getTgId(req.body.tg_username)
 
     const createdUser = await prisma.$transaction(async (prisma: any) => {
+      const newcomerBonus = req.body.invited_by ? new Decimal(10) : new Decimal(5)
+
       const user = await prisma.user.create({
         data: {
           id: randomUUID(),
@@ -34,7 +37,16 @@ router.post('/', async (req, res, next) => {
           tg_id: tgId,
           referral_code: generateReferralCode(),
           invited_by: req.body.invited_by,
-          balance: req.body.invited_by ? new Decimal(10) : new Decimal(5),
+          balance: newcomerBonus,
+        },
+      })
+
+      await prisma.transaction.create({
+        data: {
+          id: randomUUID(),
+          amount: newcomerBonus,
+          user_id: user.id,
+          type: TransactionType.Deposit,
         },
       })
 

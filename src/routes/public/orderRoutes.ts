@@ -9,6 +9,7 @@ import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
 import { recreateOrderTracks } from '../../utils/orderTrack'
 import { getTgId } from '../../utils/telegram'
 import { Decimal } from '@prisma/client/runtime/library'
+import { TransactionType } from '../../enums/TransactionType'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -48,6 +49,8 @@ router.post('/', async (req, res, next) => {
           },
         })
       } else {
+        const newcomerBonus = inviter ? new Decimal(10) : new Decimal(5)
+
         user = await prisma.user.create({
           data: {
             id: randomUUID(),
@@ -58,7 +61,16 @@ router.post('/', async (req, res, next) => {
             tg_id: tgId,
             referral_code: generateReferralCode(),
             invited_by: inviter ? inviter.id : null,
-            balance: inviter ? new Decimal(10) : new Decimal(5),
+            balance: newcomerBonus,
+          },
+        })
+
+        await prisma.transaction.create({
+          data: {
+            id: randomUUID(),
+            amount: newcomerBonus,
+            user_id: user.id,
+            type: TransactionType.Deposit,
           },
         })
 
