@@ -7,7 +7,7 @@ export function adminAuthMiddleware(req: Request, res: Response, next: NextFunct
 
     switch (authType) {
       case 'Bearer':
-        if (process.env.API_SECRET !== authData) {
+        if (process.env.BEEZON_API_SECRET !== authData) {
           return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
         }
 
