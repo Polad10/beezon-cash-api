@@ -43,7 +43,6 @@ router.post('/', async (req, res, next) => {
       const order = await prisma.order.create({
         data: {
           id: randomUUID(),
-          date: req.body.date,
           bonus_received: req.body.bonus_received,
           weight: req.body.weight,
           weight_rounded: req.body.weight_rounded,
@@ -100,7 +99,6 @@ router.put('/:id', async (req, res, next) => {
           id: req.params.id,
         },
         data: {
-          date: req.body.date,
           bonus_received: req.body.bonus_received,
           weight: req.body.weight,
           weight_rounded: req.body.weight_rounded,

@@ -77,7 +77,6 @@ router.post('/', async (req, res, next) => {
       const order = await prisma.order.create({
         data: {
           id: randomUUID(),
-          date: req.body.date,
           description: req.body.description,
           user_id: user.id,
           city: req.body.city || City.Other,
