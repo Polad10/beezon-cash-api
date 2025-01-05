@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import httpStatusCodes from '../constants/httpStatusCodes'
 import { validate, parse } from '@telegram-apps/init-data-node'
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export function clientAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const [authType, authData] = (req.header('authorization') || '').split(' ')
 
@@ -10,18 +10,14 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
     switch (authType) {
       case 'tma':
-        try {
-          // validate(authData, token, {
-          //   expiresIn: 3600,
-          // })
+        // validate(authData, token, {
+        //   expiresIn: 3600,
+        // })
 
-          const authDataParsed = parse(authData)
-          res.locals.tgId = authDataParsed?.user?.id.toString()
+        const authDataParsed = parse(authData)
+        res.locals.tgId = authDataParsed?.user?.id.toString()
 
-          return next()
-        } catch (ex) {
-          return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
-        }
+        return next()
       default:
         return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
     }

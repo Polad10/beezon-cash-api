@@ -7,7 +7,8 @@ import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
 import adminTranasctionRoutes from './routes/admin/transactionRoutes'
-import { authMiddleware } from './middlewares/auth'
+import { clientAuthMiddleware } from './middlewares/clientAuth'
+import { adminAuthMiddleware } from './middlewares/adminAuth'
 import mongoose from 'mongoose'
 import { errorMiddleware } from './middlewares/error'
 import { logMiddleware } from './middlewares/log'
@@ -22,10 +23,11 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/', logMiddleware)
-app.use('/api', authMiddleware)
+app.use('/api', clientAuthMiddleware)
 app.use('/api/me', meRoutes)
 app.use('/api/orders', orderRoutes)
 
+app.use('/admin', adminAuthMiddleware)
 app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 app.use('/admin/api/messages', adminMessageRoutes)
