@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatusCodes from '../constants/httpStatusCodes'
 import { validate, parse } from '@telegram-apps/init-data-node'
+import { log } from '../utils/log'
+import { randomUUID } from 'crypto'
+import { LogLevel } from '../models/log.model'
 
 export function clientAuthMiddleware(req: Request, res: Response, next: NextFunction) {
-  try {
-    const [authType, authData] = (req.header('authorization') || '').split(' ')
+  const [authType, authData] = (req.header('authorization') || '').split(' ')
 
+  try {
     const token = '<tg-token>'
 
     switch (authType) {
@@ -19,9 +22,21 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
 
         return next()
       default:
+        logUnauthorized(authType, authData)
         return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
     }
   } catch (ex) {
-    return res.sendStatus(httpStatusCodes.internalServerError)
+    logUnauthorized(authType, authData, ex)
+    return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
   }
+}
+
+async function logUnauthorized(authType: string, authData: string, ex?: any) {
+  const extra = {
+    authType,
+    authData,
+    exception: ex,
+  }
+
+  await log(randomUUID(), LogLevel.ERROR, 'Unauthorized', extra)
 }
