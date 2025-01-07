@@ -11,6 +11,7 @@ datasource db {
 model order {
   id                  String               @id(map: "order_pk") @db.Uuid
   date                DateTime             @default(now())
+  end_date            DateTime?
   original_price      Decimal              @default(0) @db.Decimal(8, 2)
   current_price       Decimal              @default(0) @db.Decimal(8, 2)
   status              Int                  @default(0)

@@ -54,6 +54,7 @@ router.post('/', async (req, res, next) => {
           user_id: req.body.user_id,
           status: req.body.status,
           city: req.body.city || City.Other,
+          end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
         },
       })
 
@@ -110,6 +111,7 @@ router.put('/:id', async (req, res, next) => {
           user_id: req.body.user_id,
           status: req.body.status,
           city: req.body.city,
+          end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
         },
       })
 
@@ -156,6 +158,7 @@ router.patch('/:id', async (req, res, next) => {
         },
         data: {
           status: req.body.status,
+          end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
         },
       })
 
@@ -203,6 +206,7 @@ router.patch('/', async (req, res, next) => {
             },
             data: {
               status: patch.status,
+              end_date: patch.status == OrderStatus.Delivered ? new Date() : null,
             },
           })
         )
