@@ -8,7 +8,7 @@ import { OrderTrack } from './OrderTrack'
 export interface Order {
   id: string
   date: Date
-  endDate?: Date
+  end_date?: Date
   original_price: Decimal
   current_price: Decimal
   status: OrderStatus
