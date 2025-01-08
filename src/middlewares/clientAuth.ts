@@ -14,7 +14,7 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
     switch (authType) {
       case 'tma':
         validate(authData, token, {
-          expiresIn: 3600,
+          expiresIn: 0,
         })
 
         const authDataParsed = parse(authData)
