@@ -9,13 +9,13 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
   const [authType, authData] = (req.header('authorization') || '').split(' ')
 
   try {
-    const token = '<tg-token>'
+    const token = process.env.TG_API_TOKEN!
 
     switch (authType) {
       case 'tma':
-        // validate(authData, token, {
-        //   expiresIn: 3600,
-        // })
+        validate(authData, token, {
+          expiresIn: 3600,
+        })
 
         const authDataParsed = parse(authData)
         res.locals.tgId = authDataParsed?.user?.id.toString()
