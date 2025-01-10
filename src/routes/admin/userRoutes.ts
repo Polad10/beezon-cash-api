@@ -211,7 +211,7 @@ router.post('/sync', async (req, res, next) => {
       notSynced: Object.fromEntries(notSyncedUsers),
     })
   } catch (ex) {
-    next(ex)
+    res.status(httpStatusCodes.internalServerError).json(ex)
   }
 })
 
