@@ -106,7 +106,6 @@ router.delete('/:id', async (req, res, next) => {
 router.post('/sync', async (req, res, next) => {
   try {
     const notSyncedUsers = new Map<string, string[]>()
-    const syncedUsers: any[] = []
 
     const data = (
       await axios.post(`${process.env.BITRIX_API}/${process.env.BITRIX_SECRET}/crm.contact.list`, {
@@ -122,7 +121,7 @@ router.post('/sync', async (req, res, next) => {
         const firstName = u.NAME
         const lastName = u.LAST_NAME
         const hasPhoneNr = u.PHONE && u.PHONE.length != 0
-        const hasTg = u.IM && u.IM.length != 0
+        const tg = u.IM?.find((record: any) => !record.VALUE.startsWith('imol|'))?.VALUE.replace('@', '')
 
         const reasons: string[] = []
 
@@ -138,7 +137,7 @@ router.post('/sync', async (req, res, next) => {
           reasons.push('No phone number')
         }
 
-        if (!hasTg) {
+        if (!tg) {
           reasons.push('No telegram')
         }
 
@@ -153,7 +152,7 @@ router.post('/sync', async (req, res, next) => {
         const firstName = u.NAME
         const lastName = u.LAST_NAME
         const phoneNr = u.PHONE[u.PHONE.length - 1].VALUE
-        const tg = u.IM[u.IM.length - 1].VALUE.replace('@', '')
+        const tg = u.IM.find((record: any) => !record.VALUE.startsWith('imol|')).VALUE.replace('@', '')
 
         return {
           id: id,
@@ -171,7 +170,7 @@ router.post('/sync', async (req, res, next) => {
         const tgId = await getTgId(user.tg_username)
         user.tg_id = tgId
 
-        await setTimeout(1000)
+        await setTimeout(3000)
       } catch (ex) {
         if (notSyncedUsers.has(user.id)) {
           notSyncedUsers.get(user.id)?.push('No telegram id found')
@@ -200,10 +199,8 @@ router.post('/sync', async (req, res, next) => {
       )
     )
 
-    syncedUsers.push(...users)
-
     res.json({
-      synced: syncedUsers,
+      synced: users,
       notSynced: Object.fromEntries(notSyncedUsers),
     })
   } catch (ex) {
