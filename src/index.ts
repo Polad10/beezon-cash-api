@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import meRoutes from './routes/meRoutes'
 import orderRoutes from './routes/orderRoutes'
+import userRoutes from './routes/userRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
@@ -26,6 +27,7 @@ app.use('/', logMiddleware)
 app.use('/api', clientAuthMiddleware)
 app.use('/api/me', meRoutes)
 app.use('/api/orders', orderRoutes)
+app.use('/api/users', userRoutes)
 
 app.use('/admin', adminAuthMiddleware)
 app.use('/admin/api/users', adminUserRoutes)

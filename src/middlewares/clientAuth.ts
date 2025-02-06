@@ -17,6 +17,7 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
 
         const authDataParsed = parse(authData)
         res.locals.tgId = authDataParsed?.user?.id.toString()
+        res.locals.tgUsername = authDataParsed.user?.username
 
         return next()
       default:

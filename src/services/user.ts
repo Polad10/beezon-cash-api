@@ -53,3 +53,16 @@ export async function createUser(prisma: any, user: User) {
 
   return createdUser
 }
+
+export async function getInviter(prisma: any, inviteCode: string) {
+  return inviteCode
+    ? await prisma.user.findFirst({
+        where: {
+          referral_code: {
+            equals: inviteCode,
+            mode: 'insensitive',
+          },
+        },
+      })
+    : null
+}

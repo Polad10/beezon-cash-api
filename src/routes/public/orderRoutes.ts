@@ -8,7 +8,7 @@ import { sendStageUpdateMessage } from '../../utils/notification'
 import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
 import { recreateOrderTracks } from '../../utils/orderTrack'
 import { getTgId } from '../../utils/telegram'
-import { createUser, User } from '../../services/user'
+import { createUser, getInviter, User } from '../../services/user'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -37,16 +37,7 @@ router.post('/', async (req, res, next) => {
           },
         })
       } else {
-        const inviter = req.body.invite_code
-          ? await prisma.user.findFirst({
-              where: {
-                referral_code: {
-                  equals: req.body.invite_code,
-                  mode: 'insensitive',
-                },
-              },
-            })
-          : null
+        const inviter = await getInviter(prisma, req.body.invite_code)
 
         const userModel: User = {
           id: randomUUID(),
