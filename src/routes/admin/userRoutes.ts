@@ -4,10 +4,9 @@ import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { generateReferralCode } from '../../utils/referralCode'
 import { getTgId } from '../../utils/telegram'
-import { Decimal } from '@prisma/client/runtime/library'
-import { TransactionType } from '../../enums/TransactionType'
 import { setTimeout } from 'timers/promises'
 import axios from 'axios'
+import { createUser, User } from '../../services/user'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -26,44 +25,19 @@ router.post('/', async (req, res, next) => {
   try {
     const tgId = await getTgId(req.body.tg_username)
 
+    const user: User = {
+      id: randomUUID(),
+      first_name: req.body.first_name,
+      last_name: req.body.last_name,
+      phone_nr: req.body.phone_nr,
+      tg_username: req.body.tg_username,
+      tg_id: tgId,
+      referral_code: generateReferralCode(),
+      invited_by: req.body.invited_by,
+    }
+
     const createdUser = await prisma.$transaction(async (prisma: any) => {
-      const newcomerBonus = req.body.invited_by ? new Decimal(10) : new Decimal(5)
-
-      const user = await prisma.user.create({
-        data: {
-          id: randomUUID(),
-          first_name: req.body.first_name,
-          last_name: req.body.last_name,
-          phone_nr: req.body.phone_nr,
-          tg_username: req.body.tg_username,
-          tg_id: tgId,
-          referral_code: generateReferralCode(),
-          invited_by: req.body.invited_by,
-          balance: newcomerBonus,
-        },
-      })
-
-      await prisma.transaction.create({
-        data: {
-          id: randomUUID(),
-          amount: newcomerBonus,
-          user_id: user.id,
-          type: TransactionType.Deposit,
-        },
-      })
-
-      if (req.body.invited_by) {
-        await prisma.pending_bonus.create({
-          data: {
-            id: randomUUID(),
-            from_user_id: user.id,
-            to_user_id: req.body.invited_by,
-            amount: new Decimal(10),
-          },
-        })
-      }
-
-      return user
+      return await createUser(prisma, user)
     })
 
     res.json(createdUser)

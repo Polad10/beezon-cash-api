@@ -8,8 +8,7 @@ import { sendStageUpdateMessage } from '../../utils/notification'
 import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
 import { recreateOrderTracks } from '../../utils/orderTrack'
 import { getTgId } from '../../utils/telegram'
-import { Decimal } from '@prisma/client/runtime/library'
-import { TransactionType } from '../../enums/TransactionType'
+import { createUser, User } from '../../services/user'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -25,17 +24,6 @@ router.post('/', async (req, res, next) => {
         },
       })
 
-      const inviter = req.body.invite_code
-        ? await prisma.user.findFirst({
-            where: {
-              referral_code: {
-                equals: req.body.invite_code,
-                mode: 'insensitive',
-              },
-            },
-          })
-        : null
-
       if (user) {
         user = await prisma.user.update({
           where: {
@@ -49,41 +37,29 @@ router.post('/', async (req, res, next) => {
           },
         })
       } else {
-        const newcomerBonus = inviter ? new Decimal(10) : new Decimal(5)
+        const inviter = req.body.invite_code
+          ? await prisma.user.findFirst({
+              where: {
+                referral_code: {
+                  equals: req.body.invite_code,
+                  mode: 'insensitive',
+                },
+              },
+            })
+          : null
 
-        user = await prisma.user.create({
-          data: {
-            id: randomUUID(),
-            first_name: req.body.first_name,
-            last_name: req.body.last_name,
-            phone_nr: req.body.phone_nr,
-            tg_username: req.body.tg_username,
-            tg_id: tgId,
-            referral_code: generateReferralCode(),
-            invited_by: inviter ? inviter.id : null,
-            balance: newcomerBonus,
-          },
-        })
-
-        await prisma.transaction.create({
-          data: {
-            id: randomUUID(),
-            amount: newcomerBonus,
-            user_id: user.id,
-            type: TransactionType.Deposit,
-          },
-        })
-
-        if (inviter) {
-          await prisma.pending_bonus.create({
-            data: {
-              id: randomUUID(),
-              from_user_id: user.id,
-              to_user_id: inviter.id,
-              amount: new Decimal(10),
-            },
-          })
+        const userModel: User = {
+          id: randomUUID(),
+          first_name: req.body.first_name,
+          last_name: req.body.last_name,
+          phone_nr: req.body.phone_nr,
+          tg_username: req.body.tg_username,
+          tg_id: tgId,
+          referral_code: generateReferralCode(),
+          invited_by: inviter ? inviter.id : null,
         }
+
+        user = await createUser(prisma, userModel)
       }
 
       const order = await prisma.order.create({
