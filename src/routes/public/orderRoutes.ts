@@ -5,10 +5,9 @@ import { City } from '../../enums/City'
 import { generateReferralCode } from '../../utils/referralCode'
 import httpStatusCodes from '../../constants/httpStatusCodes'
 import { sendStageUpdateMessage } from '../../utils/notification'
-import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
-import { recreateOrderTracks } from '../../utils/orderTrack'
 import { getTgId } from '../../utils/telegram'
 import { createUser, getInviter, User } from '../../services/user'
+import { createOrder, Order } from '../../services/order'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -53,17 +52,14 @@ router.post('/', async (req, res, next) => {
         user = await createUser(prisma, userModel)
       }
 
-      const order = await prisma.order.create({
-        data: {
-          id: randomUUID(),
-          description: req.body.description,
-          user_id: user.id,
-          city: req.body.city || City.Other,
-        },
-      })
+      const orderModel: Order = {
+        id: randomUUID(),
+        description: req.body.description,
+        user_id: user.id,
+        city: req.body.city || City.Other,
+      }
 
-      await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
-      await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
+      const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
 
       return { user, order }
     })

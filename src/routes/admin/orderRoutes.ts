@@ -15,9 +15,10 @@ import {
   sendStageUpdateMessage,
   sendStageUpdateMessages,
 } from '../../utils/notification'
-import { recreateOrderTypeMappings } from '../../utils/orderTypeMapping'
-import { recreateOrderTracks } from '../../utils/orderTrack'
+import { recreateOrderTypeMappings } from '../../services/orderTypeMapping'
+import { recreateOrderTracks } from '../../services/orderTrack'
 import { User } from '../../models/User'
+import { createOrder, Order as NewOrder } from '../../services/order'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -40,27 +41,23 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const [createdOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
-      const order = await prisma.order.create({
-        data: {
-          id: randomUUID(),
-          bonus_received: req.body.bonus_received,
-          weight: req.body.weight,
-          weight_rounded: req.body.weight_rounded,
-          additional_cost: req.body.additional_cost,
-          original_price: req.body.original_price,
-          current_price: req.body.current_price,
-          partner_cost: req.body.partner_cost,
-          description: req.body.description,
-          user_id: req.body.user_id,
-          status: req.body.status,
-          city: req.body.city || City.Other,
-          end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
-        },
-      })
+      const orderModel: NewOrder = {
+        id: randomUUID(),
+        bonus_received: req.body.bonus_received,
+        weight: req.body.weight,
+        weight_rounded: req.body.weight_rounded,
+        additional_cost: req.body.additional_cost,
+        original_price: req.body.original_price,
+        current_price: req.body.current_price,
+        partner_cost: req.body.partner_cost,
+        description: req.body.description,
+        user_id: req.body.user_id,
+        status: req.body.status,
+        city: req.body.city || City.Other,
+        end_date: req.body.status == OrderStatus.Delivered ? new Date() : undefined,
+      }
 
-      await recreateOrderTypeMappings(prisma, req.body.order_type_mappings, order.id)
-      await recreateOrderTracks(prisma, req.body.order_tracks, order.id)
-
+      const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
       const stageResult = await processStage(prisma, order)
       const createdOrder = await getOrder(prisma, order.id)
 

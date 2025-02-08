@@ -1,6 +1,5 @@
 import { Decimal } from '@prisma/client/runtime/library'
 import { randomUUID } from 'crypto'
-import { generateReferralCode } from '../utils/referralCode'
 import { TransactionType } from '../enums/TransactionType'
 
 export interface User {
@@ -19,14 +18,7 @@ export async function createUser(prisma: any, user: User) {
 
   const createdUser = await prisma.user.create({
     data: {
-      id: randomUUID(),
-      first_name: user.first_name,
-      last_name: user.last_name,
-      phone_nr: user.phone_nr,
-      tg_username: user.tg_username,
-      tg_id: user.tg_id,
-      referral_code: generateReferralCode(),
-      invited_by: user.invited_by,
+      ...user,
       balance: newcomerBonus,
     },
   })
