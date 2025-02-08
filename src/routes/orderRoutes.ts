@@ -5,7 +5,9 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
 import { randomUUID } from 'crypto'
 import { TransactionType } from '../enums/TransactionType'
-import { sendBonusAppliedMessage } from '../utils/notification'
+import { sendBonusAppliedMessage, sendStageUpdateMessage } from '../utils/notification'
+import { createOrder, Order } from '../services/order'
+import { City } from '../enums/City'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -21,6 +23,42 @@ router.get('/', async (req, res, next) => {
     })
 
     res.json(orders)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
+router.post('/', async (req, res, next) => {
+  try {
+    const { user, order } = await prisma.$transaction(async (prisma: any) => {
+      let user = await prisma.user.findUnique({
+        where: {
+          tg_id: res.locals.tgId,
+        },
+      })
+
+      const orderModel: Order = {
+        id: randomUUID(),
+        description: req.body.description,
+        user_id: user.id,
+        city: req.body.city || City.Other,
+      }
+
+      const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
+
+      return { user, order }
+    })
+
+    sendStageUpdateMessage({
+      tgId: user.tg_id,
+      orderCode: order.code,
+      orderStatus: order.status,
+      weight: order.weight,
+      deliveryPrice: order.current_price,
+      ponyPrice: order.partner_cost,
+    })
+
+    res.json(order)
   } catch (ex) {
     next(ex)
   }
