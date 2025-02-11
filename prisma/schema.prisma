@@ -44,7 +44,7 @@ model user {
   first_name           String          @db.VarChar(50)
   last_name            String          @db.VarChar(50)
   phone_nr             String          @db.VarChar(20)
-  tg_username          String          @unique(map: "tg_username_unique") @db.VarChar(32)
+  tg_username          String?         @unique(map: "tg_username_unique") @db.VarChar(32)
   tg_id                String          @unique(map: "tg_id_unique") @db.VarChar(25)
   referral_code        String          @unique(map: "referral_code_unique") @db.VarChar(15)
   invited_by           String?         @db.Uuid

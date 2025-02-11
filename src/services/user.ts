@@ -7,7 +7,7 @@ export interface User {
   first_name: string
   last_name: string
   phone_nr: string
-  tg_username: string
+  tg_username: string | null
   tg_id: string
   referral_code: string
   invited_by: string | null
