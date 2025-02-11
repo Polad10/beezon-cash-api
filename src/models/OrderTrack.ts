@@ -17,4 +17,6 @@ export enum DeliveryProvider {
   PostRussia,
   Boxberry,
   POST5,
+  DPD,
+  Cold,
 }
