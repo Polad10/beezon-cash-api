@@ -14,6 +14,10 @@ import mongoose from 'mongoose'
 import { errorMiddleware } from './middlewares/error'
 import { logMiddleware } from './middlewares/log'
 import publicOrderRoutes from './routes/public/orderRoutes'
+import cron from 'node-cron'
+import { exec } from 'child_process'
+import fs from 'fs'
+import { google } from 'googleapis'
 
 dotenv.config()
 
@@ -38,6 +42,60 @@ app.use('/admin/api/transactions', adminTranasctionRoutes)
 app.use('/public/api/orders', publicOrderRoutes)
 
 app.use(errorMiddleware)
+
+if (process.env.ENVIRONMENT == 'prod') {
+  cron.schedule('*/10 * * * * *', () => {
+    const timestamp = new Date()
+      .toISOString()
+      .replace('T', '_')
+      .replace('Z', '')
+      .replaceAll(':', '-')
+      .replaceAll('.', '-')
+
+    const fileName = `beezon-cash-${timestamp}.backup`
+    const filePath = `./tmp/${fileName}`
+    const connectionString = process.env.DATABASE_URL?.split('?')[0]
+    const command = `pg_dump -F c -f ${filePath} -d ${connectionString}`
+
+    exec(command, async (error, stdout, stderr) => {
+      try {
+        if (error) {
+          console.log(`Backup failed: ${error}`)
+          return
+        } else {
+          console.log(`Backup created: ${filePath}`)
+
+          const auth = new google.auth.GoogleAuth({
+            scopes: 'https://www.googleapis.com/auth/drive',
+            keyFile: 'google-drive-credentials.json',
+          })
+
+          const drive = google.drive({ version: 'v3', auth })
+
+          const metadata = {
+            name: fileName,
+            parents: ['1TzDG2qQqHmG-po161bE6__qNJHLmRcOL'],
+          }
+
+          const media = {
+            mimeType: 'application/octet-stream',
+            body: fs.createReadStream(filePath),
+          }
+
+          await drive.files.create({
+            requestBody: metadata,
+            media: media,
+            fields: 'id',
+          })
+
+          console.log(`Backup uploaded: ${fileName}`)
+        }
+      } catch (ex) {
+        console.log(`Could not upload backup file: ${ex}`)
+      }
+    })
+  })
+}
 
 app.listen(port, async () => {
   await mongoose.connect(process.env.MONGODB_CONNECTION_STRING!)
