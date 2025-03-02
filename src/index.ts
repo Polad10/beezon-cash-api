@@ -44,7 +44,7 @@ app.use('/public/api/orders', publicOrderRoutes)
 app.use(errorMiddleware)
 
 if (process.env.ENVIRONMENT == 'prod') {
-  cron.schedule('*/10 * * * * *', () => {
+  cron.schedule('0 0 * * *', () => {
     const timestamp = new Date()
       .toISOString()
       .replace('T', '_')
