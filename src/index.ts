@@ -67,7 +67,7 @@ if (process.env.ENVIRONMENT == 'prod') {
 
           const auth = new google.auth.GoogleAuth({
             scopes: 'https://www.googleapis.com/auth/drive',
-            keyFile: 'google-drive-credentials.json',
+            credentials: JSON.parse(process.env.GOOGLE_DRIVE_CREDENTIALS!),
           })
 
           const drive = google.drive({ version: 'v3', auth })
