@@ -9,4 +9,5 @@ export enum OrderStatus {
   ReadyForDeliveryByPony,
   WaitingForDeliveryByPony,
   Delivered,
+  Waiting,
 }

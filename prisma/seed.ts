@@ -240,6 +240,15 @@ async function fillOrderStatusTable() {
       name: 'Delivered',
     },
   })
+
+  await prisma.order_status.upsert({
+    where: { name: 'Waiting' },
+    update: {},
+    create: {
+      id: 10,
+      name: 'Waiting',
+    },
+  })
 }
 
 async function fillOrderTypeTable() {
