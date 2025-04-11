@@ -13,7 +13,7 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
 
     switch (authType) {
       case 'tma':
-        if (process.env.ENVIRONMENT == 'prod') {
+        if (process.env.ENVIRONMENT != 'local') {
           validate(authData, token)
         }
 
