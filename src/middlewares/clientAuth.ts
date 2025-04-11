@@ -13,7 +13,9 @@ export function clientAuthMiddleware(req: Request, res: Response, next: NextFunc
 
     switch (authType) {
       case 'tma':
-        validate(authData, token)
+        if (process.env.ENVIRONMENT == 'prod') {
+          validate(authData, token)
+        }
 
         const authDataParsed = parse(authData)
         res.locals.tgId = authDataParsed?.user?.id.toString()
