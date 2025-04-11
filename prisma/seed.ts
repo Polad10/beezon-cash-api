@@ -188,10 +188,19 @@ async function fillOrderStatusTable() {
   })
 
   await prisma.order_status.upsert({
-    where: { name: 'ProcessedInTbilisi' },
+    where: { name: 'Waiting' },
     update: {},
     create: {
       id: 4,
+      name: 'Waiting',
+    },
+  })
+
+  await prisma.order_status.upsert({
+    where: { name: 'ProcessedInTbilisi' },
+    update: {},
+    create: {
+      id: 5,
       name: 'ProcessedInTbilisi',
     },
   })
@@ -200,7 +209,7 @@ async function fillOrderStatusTable() {
     where: { name: 'ReadyForDeliveryInTbilisi' },
     update: {},
     create: {
-      id: 5,
+      id: 6,
       name: 'ReadyForDeliveryInTbilisi',
     },
   })
@@ -209,7 +218,7 @@ async function fillOrderStatusTable() {
     where: { name: 'WarehouseTbilisi' },
     update: {},
     create: {
-      id: 6,
+      id: 7,
       name: 'WarehouseTbilisi',
     },
   })
@@ -218,7 +227,7 @@ async function fillOrderStatusTable() {
     where: { name: 'ReadyForDeliveryByPony' },
     update: {},
     create: {
-      id: 7,
+      id: 8,
       name: 'ReadyForDeliveryByPony',
     },
   })
@@ -227,7 +236,7 @@ async function fillOrderStatusTable() {
     where: { name: 'WaitingForDeliveryByPony' },
     update: {},
     create: {
-      id: 8,
+      id: 9,
       name: 'WaitingForDeliveryByPony',
     },
   })
@@ -236,17 +245,8 @@ async function fillOrderStatusTable() {
     where: { name: 'Delivered' },
     update: {},
     create: {
-      id: 9,
-      name: 'Delivered',
-    },
-  })
-
-  await prisma.order_status.upsert({
-    where: { name: 'Waiting' },
-    update: {},
-    create: {
       id: 10,
-      name: 'Waiting',
+      name: 'Delivered',
     },
   })
 }
