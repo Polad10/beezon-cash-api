@@ -29,7 +29,27 @@ model order {
   user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
   order_tracks        order_track[]
   order_type_mappings order_type_mapping[]
-  transaction         transaction[]
+}
+
+model order_ge_ru {
+  id                String    @id(map: "order_ge_ru_pk") @db.Uuid
+  hint_price        String
+  original_price    Decimal   @default(0) @db.Decimal(8, 2)
+  current_price     Decimal   @default(0) @db.Decimal(8, 2)
+  status            String    @default("New")
+  user_id           String    @db.Uuid
+  code              Int       @unique(map: "order_ge_ru_code_unique") @default(autoincrement())
+  description       String
+  weight            Decimal   @default(0) @db.Decimal(8, 2)
+  weight_rounded    Boolean   @default(false)
+  receiver_name     String
+  receiver_phone_nr String
+  receiver_address  String
+  cdek_track_nr     String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @default(now())
+  delivered_at      DateTime?
+  user              user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
 }
 
 model order_status {
@@ -49,7 +69,8 @@ model user {
   referral_code        String          @unique(map: "referral_code_unique") @db.VarChar(15)
   invited_by           String?         @db.Uuid
   balance              Decimal         @default(0) @db.Decimal(8, 2)
-  order                order[]
+  orders               order[]
+  orders_ge_ru         order_ge_ru[]
   inviter              user?           @relation("userTouser", fields: [invited_by], references: [id], map: "user_fk")
   other_user           user[]          @relation("userTouser")
   transaction          transaction[]
@@ -109,7 +130,7 @@ model transaction {
   user_id          String           @db.Uuid
   type             Int
   amount           Decimal          @db.Decimal(8, 2)
-  order            order?           @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "transaction_order_fk")
+  reason           String           @default("")
   user             user             @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "transaction_user_fk")
   transaction_type transaction_type @relation(fields: [type], references: [id], onDelete: Restrict, map: "transaction_type_fk")
 }
