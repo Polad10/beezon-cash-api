@@ -143,6 +143,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
           order_id: updatedOrder.id,
           user_id: updatedUser.id,
           type: TransactionType.Withdrawal,
+          reason: `Бонус применен к заказу #${updatedOrder.code}`,
         },
       })
 

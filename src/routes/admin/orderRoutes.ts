@@ -348,6 +348,7 @@ async function processTransactions(prisma: any, order: Order) {
           order_id: order.id,
           user_id: order.user_id,
           type: TransactionType.Deposit,
+          reason: `Кешбэк начислен за заказ #${order.code}`,
         },
       })
 
@@ -382,6 +383,7 @@ async function processTransactions(prisma: any, order: Order) {
           amount: pendingBonus.amount,
           user_id: pendingBonus.to_user.id,
           type: TransactionType.Deposit,
+          reason: `Бонус начислен за первый завершенный заказ друга #${order.code}`,
         },
       })
 

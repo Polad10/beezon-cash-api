@@ -29,6 +29,7 @@ export async function createUser(prisma: any, user: User) {
       amount: newcomerBonus,
       user_id: createdUser.id,
       type: TransactionType.Deposit,
+      reason: 'Новый клиент',
     },
   })
 
