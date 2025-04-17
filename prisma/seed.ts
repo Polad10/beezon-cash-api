@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
 import { OrderStatus } from '../src/enums/OrderStatus'
 const prisma = new PrismaClient()
 
@@ -9,6 +9,7 @@ async function main() {
   await fillOrderTypeTable()
   await fillMessageTable()
   await fillTransactionTypeTable()
+  await fillMessageGeRuTable()
 }
 
 async function fillCityTable() {
@@ -380,6 +381,41 @@ async function fillMessageTable() {
 - ФИО
 - Адрес и номер телефона получателя`,
       order_status: OrderStatus.ReadyForDeliveryByPony,
+    },
+  })
+}
+
+async function fillMessageGeRuTable() {
+  await prisma.message_ge_ru.upsert({
+    where: {
+      order_status: OrderStatusGeRu.InvoiceCreated,
+    },
+    update: {},
+    create: {
+      id: 0,
+      name: 'Создана накладная',
+      text: `<b>Заказ #{{orderCode}} на доставку из Грузии в Россию оформлен!</b> 
+      Трек-номер отправления: <code>{{orderTrackNumber}}</code> 
+      Следить за статусом можно <a href="https://www.cdek.ru/m/order/{{orderTrackNumber}}"><b>здесь</b></a> 
+      или в <a href="https://onelink.to/gjy7d2"><b>мобильном приложении</b></a> 
+      <b>Мы сообщим, когда посылка будет передана в СДЭК для отправки</b>`,
+      order_status: OrderStatusGeRu.InvoiceCreated,
+    },
+  })
+
+  await prisma.message_ge_ru.upsert({
+    where: {
+      order_status: OrderStatusGeRu.DrivingInRf,
+    },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Поехало внутри РФ',
+      text: `<b>Ваша посылка <code>{{orderTrackNumber}}</code> в пути!</b> 
+      Следить за статусом можно <a href="https://www.cdek.ru/m/order/{{orderTrackNumber}}"><b>здесь</b></a> 
+      или в <a href="https://onelink.to/gjy7d2"><b>мобильном приложении</b></a> 
+      После получения заказа будем рады любой обратной связи по качеству доставки - это помогает нам становиться лучше`,
+      order_status: OrderStatusGeRu.DrivingInRf,
     },
   })
 }
