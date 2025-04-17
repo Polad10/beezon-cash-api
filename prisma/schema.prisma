@@ -8,6 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum OrderStatusGeRu {
+  New
+  InvoiceCreated
+  DrivingInRf
+  Delivered
+}
+
 model order {
   id                  String               @id(map: "order_pk") @db.Uuid
   date                DateTime             @default(now())
@@ -32,24 +39,24 @@ model order {
 }
 
 model order_ge_ru {
-  id                String    @id(map: "order_ge_ru_pk") @db.Uuid
+  id                String          @id(map: "order_ge_ru_pk") @db.Uuid
   hint_price        String
-  original_price    Decimal   @default(0) @db.Decimal(8, 2)
-  current_price     Decimal   @default(0) @db.Decimal(8, 2)
-  status            String    @default("New")
-  user_id           String    @db.Uuid
-  code              Int       @unique(map: "order_ge_ru_code_unique") @default(autoincrement())
+  original_price    Decimal         @default(0) @db.Decimal(8, 2)
+  current_price     Decimal         @default(0) @db.Decimal(8, 2)
+  status            OrderStatusGeRu @default(New)
+  user_id           String          @db.Uuid
+  code              Int             @unique(map: "order_ge_ru_code_unique") @default(autoincrement())
   description       String
-  weight            Decimal   @default(0) @db.Decimal(8, 2)
-  weight_rounded    Boolean   @default(false)
+  weight            Decimal         @default(0) @db.Decimal(8, 2)
+  weight_rounded    Boolean         @default(false)
   receiver_name     String
   receiver_phone_nr String
   receiver_address  String
   cdek_track_nr     String?
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @default(now())
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @default(now())
   delivered_at      DateTime?
-  user              user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
+  user              user            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
 }
 
 model order_status {
@@ -84,6 +91,13 @@ model message {
   text             String
   order_status     Int          @unique(map: "order_status_id_unique")
   order_status_ref order_status @relation(fields: [order_status], references: [id], onDelete: Restrict, map: "message_order_status_fk")
+}
+
+model message_ge_ru {
+  id           Int             @id(map: "message_ge_ru_pk") @default(autoincrement())
+  name         String          @db.VarChar(50)
+  text         String
+  order_status OrderStatusGeRu @unique(map: "order_status_unique")
 }
 
 model city {

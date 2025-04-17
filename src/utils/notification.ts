@@ -5,9 +5,9 @@ import { log } from './log'
 import { randomUUID } from 'crypto'
 import { LogLevel } from '../models/log.model'
 import Handlebars from 'handlebars'
-import { OrderRecepient } from '../models/OrderRecepient'
+import { OrderRecepient, OrderRecepientGeRu } from '../models/OrderRecepient'
 import { CashbackRecepient } from '../models/CashbackRecepient'
-import { PrismaClient } from '@prisma/client'
+import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
 import tgClient from './tgClient'
 
 const prisma = new PrismaClient()
@@ -43,6 +43,41 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
         deliveryPrice: orderRecepient.deliveryPrice,
         ponyPrice: orderRecepient.ponyPrice,
       })
+    }
+
+    if (message) {
+      await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
+    }
+  } catch (ex) {
+    const error = ex as Error
+
+    const extra = {
+      tgId: orderRecepient.tgId,
+      orderCode: orderRecepient.orderCode,
+      orderStatus: orderRecepient.orderStatus,
+      ...error,
+    }
+
+    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
+  }
+}
+
+export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientGeRu) {
+  try {
+    let message: string | undefined = undefined
+
+    if (orderRecepient.orderStatus == OrderStatusGeRu.InvoiceCreated) {
+      const templateText = (
+        await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.InvoiceCreated } })
+      )?.text
+      const template = Handlebars.compile(templateText)
+      message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
+    } else if (orderRecepient.orderStatus == OrderStatusGeRu.DrivingInRf) {
+      const templateText = (
+        await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.DrivingInRf } })
+      )?.text
+      const template = Handlebars.compile(templateText)
+      message = template({ orderTrackNumber: orderRecepient.cdekTrackNr })
     }
 
     if (message) {

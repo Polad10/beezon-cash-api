@@ -14,6 +14,7 @@ import mongoose from 'mongoose'
 import { errorMiddleware } from './middlewares/error'
 import { logMiddleware } from './middlewares/log'
 import publicOrderRoutes from './routes/public/orderRoutes'
+import publicOrderGeRuRoutes from './routes/public/geru/orderRoutes'
 import cron from 'node-cron'
 import { exec } from 'child_process'
 import fs from 'fs'
@@ -40,6 +41,7 @@ app.use('/admin/api/messages', adminMessageRoutes)
 app.use('/admin/api/transactions', adminTranasctionRoutes)
 
 app.use('/public/api/orders', publicOrderRoutes)
+app.use('/public/api/geru/orders', publicOrderGeRuRoutes)
 
 app.use(errorMiddleware)
 
