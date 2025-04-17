@@ -49,11 +49,13 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
       await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
     }
   } catch (ex) {
+    const error = ex as Error
+
     const extra = {
       tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
-      exception: ex,
+      ...error,
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
@@ -65,10 +67,12 @@ export async function sendBonusAppliedMessage(tgId: string, orderCode: number, n
     const message = `Бонусные баллы применены для заказа #${orderCode}! Новая стоимость доставки: ${newPrice} ₾`
     await sendMessage(tgId, message, orderCode)
   } catch (ex) {
+    const error = ex as Error
+
     const extra = {
       tgId,
       orderCode,
-      exception: ex,
+      ...error,
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
@@ -87,10 +91,12 @@ export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRece
     const message = `На ваш баланс начислен кэшбек: +${cashbackRecepient.cashback} ₾`
     await sendMessage(cashbackRecepient.tgId, message, cashbackRecepient.orderCode)
   } catch (ex) {
+    const error = ex as Error
+
     const extra = {
       tgId: cashbackRecepient.tgId,
       orderCode: cashbackRecepient.orderCode,
-      exception: ex,
+      ...error,
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
