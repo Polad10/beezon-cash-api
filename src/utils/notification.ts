@@ -9,6 +9,7 @@ import { OrderRecepient, OrderRecepientGeRu } from '../models/OrderRecepient'
 import { CashbackRecepient } from '../models/CashbackRecepient'
 import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
 import tgClient from './tgClient'
+import { getErrorData } from './error'
 
 const prisma = new PrismaClient()
 
@@ -55,7 +56,7 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
       tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
-      extra: { ...error },
+      extra: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
@@ -90,7 +91,7 @@ export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientG
       tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
-      extra: { ...error },
+      extra: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
@@ -107,7 +108,7 @@ export async function sendBonusAppliedMessage(tgId: string, orderCode: number, n
     const extra = {
       tgId,
       orderCode,
-      extra: { ...error },
+      extra: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
@@ -131,7 +132,7 @@ export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRece
     const extra = {
       tgId: cashbackRecepient.tgId,
       orderCode: cashbackRecepient.orderCode,
-      extra: { ...error },
+      extra: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
