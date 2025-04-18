@@ -8,7 +8,6 @@ export interface OrderGeRuInput {
   current_price?: Decimal
   status?: OrderStatusGeRu
   user_id: string
-  code?: number
   description?: string
   weight?: Decimal
   weight_rounded?: boolean

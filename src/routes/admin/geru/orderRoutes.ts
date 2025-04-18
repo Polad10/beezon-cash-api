@@ -1,5 +1,8 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
+import { OrderGeRuInput } from '../../../models/OrderGeRuInput'
+import { randomUUID } from 'crypto'
+import { sendStageUpdateGeRuMessage } from '../../../utils/notification'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -13,5 +16,56 @@ router.get('/', async (req, res, next) => {
     next(ex)
   }
 })
+
+router.post('/', async (req, res, next) => {
+  try {
+    const orderModel: OrderGeRuInput = {
+      id: randomUUID(),
+      hint_price: '',
+      original_price: req.body.original_price,
+      current_price: req.body.current_price,
+      status: req.body.status,
+      user_id: req.body.user_id,
+      description: req.body.description,
+      weight: req.body.weight,
+      weight_rounded: req.body.weight_rounded,
+      receiver_name: req.body.receiver_name,
+      receiver_phone_nr: req.body.receiver_phone_nr,
+      receiver_address: req.body.receiver_address,
+      cdek_track_nr: req.body.cdek_track_nr,
+      delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
+    }
+
+    const order = await prisma.order_ge_ru.create({
+      data: orderModel,
+    })
+
+    const orderWithUser = await getOrder(prisma, order.id)
+
+    if (req.body.send_notification) {
+      sendStageUpdateGeRuMessage({
+        tgId: orderWithUser.user.tg_id,
+        orderCode: order.code,
+        orderStatus: order.status,
+        cdekTrackNr: order.cdek_track_nr!,
+      })
+    }
+
+    res.json(order)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
+async function getOrder(prisma: any, id: string) {
+  return await prisma.order_ge_ru.findUnique({
+    where: {
+      id: id,
+    },
+    include: {
+      user: true,
+    },
+  })
+}
 
 export default router
