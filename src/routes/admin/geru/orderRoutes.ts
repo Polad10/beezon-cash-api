@@ -3,6 +3,7 @@ import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
 import { OrderGeRuInput } from '../../../models/OrderGeRuInput'
 import { randomUUID } from 'crypto'
 import { sendStageUpdateGeRuMessage } from '../../../utils/notification'
+import httpStatusCodes from '../../../constants/httpStatusCodes'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -52,6 +53,20 @@ router.post('/', async (req, res, next) => {
     }
 
     res.json(order)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    await prisma.order_ge_ru.delete({
+      where: {
+        id: req.params.id,
+      },
+    })
+
+    res.sendStatus(httpStatusCodes.ok)
   } catch (ex) {
     next(ex)
   }
