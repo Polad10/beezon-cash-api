@@ -5,6 +5,7 @@ import meRoutes from './routes/meRoutes'
 import orderRoutes from './routes/orderRoutes'
 import userRoutes from './routes/userRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
+import adminGeRuRoutes from './routes/admin/geru/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
 import adminTranasctionRoutes from './routes/admin/transactionRoutes'
@@ -39,6 +40,7 @@ app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 app.use('/admin/api/messages', adminMessageRoutes)
 app.use('/admin/api/transactions', adminTranasctionRoutes)
+app.use('/admin/api/geru/orders', adminGeRuRoutes)
 
 app.use('/public/api/orders', publicOrderRoutes)
 app.use('/public/api/geru/orders', publicOrderGeRuRoutes)
