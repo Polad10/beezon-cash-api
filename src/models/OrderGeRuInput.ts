@@ -9,7 +9,7 @@ export interface OrderGeRuInput {
   status?: OrderStatusGeRu
   user_id: string
   code?: number
-  description: string
+  description?: string
   weight?: Decimal
   weight_rounded?: boolean
   receiver_name: string

@@ -46,7 +46,7 @@ model order_ge_ru {
   status            OrderStatusGeRu @default(New)
   user_id           String          @db.Uuid
   code              Int             @unique(map: "order_ge_ru_code_unique") @default(autoincrement())
-  description       String
+  description       String?
   weight            Decimal         @default(0) @db.Decimal(8, 2)
   weight_rounded    Boolean         @default(false)
   receiver_name     String
