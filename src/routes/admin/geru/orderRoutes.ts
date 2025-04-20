@@ -97,6 +97,35 @@ router.put('/:id', async (req, res, next) => {
   }
 })
 
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const order = await prisma.order_ge_ru.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        status: req.body.status,
+        delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
+      },
+    })
+
+    const orderWithUser = await getOrder(prisma, order.id)
+
+    if (req.body.send_notification) {
+      sendStageUpdateGeRuMessage({
+        tgId: orderWithUser.user.tg_id,
+        orderCode: order.code,
+        orderStatus: order.status,
+        cdekTrackNr: order.cdek_track_nr!,
+      })
+    }
+
+    res.json(order)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
 router.delete('/:id', async (req, res, next) => {
   try {
     await prisma.order_ge_ru.delete({
