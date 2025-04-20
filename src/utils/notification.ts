@@ -20,6 +20,13 @@ export async function sendStageUpdateMessages(orderRecepients: OrderRecepient[])
   }
 }
 
+export async function sendStageUpdateGeRuMessages(orderRecepients: OrderRecepientGeRu[]) {
+  for (const orderRecepient of orderRecepients) {
+    await sendStageUpdateGeRuMessage(orderRecepient)
+    await setTimeout(5000)
+  }
+}
+
 export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
   try {
     let message: string | undefined = undefined
