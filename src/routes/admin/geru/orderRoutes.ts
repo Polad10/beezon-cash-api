@@ -58,6 +58,45 @@ router.post('/', async (req, res, next) => {
   }
 })
 
+router.put('/:id', async (req, res, next) => {
+  try {
+    const order = await prisma.order_ge_ru.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        original_price: req.body.original_price,
+        current_price: req.body.current_price,
+        status: req.body.status,
+        user_id: req.body.user_id,
+        description: req.body.description,
+        weight: req.body.weight,
+        weight_rounded: req.body.weight_rounded,
+        receiver_name: req.body.receiver_name,
+        receiver_phone_nr: req.body.receiver_phone_nr,
+        receiver_address: req.body.receiver_address,
+        cdek_track_nr: req.body.cdek_track_nr,
+        delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
+      },
+    })
+
+    const orderWithUser = await getOrder(prisma, order.id)
+
+    if (req.body.send_notification) {
+      sendStageUpdateGeRuMessage({
+        tgId: orderWithUser.user.tg_id,
+        orderCode: order.code,
+        orderStatus: order.status,
+        cdekTrackNr: order.cdek_track_nr!,
+      })
+    }
+
+    res.json(order)
+  } catch (ex) {
+    next(ex)
+  }
+})
+
 router.delete('/:id', async (req, res, next) => {
   try {
     await prisma.order_ge_ru.delete({
