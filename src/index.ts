@@ -8,6 +8,7 @@ import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminGeRuRoutes from './routes/admin/geru/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
+import adminMessageGeRuRoutes from './routes/admin/geru/messageRoutes'
 import adminTranasctionRoutes from './routes/admin/transactionRoutes'
 import { clientAuthMiddleware } from './middlewares/clientAuth'
 import { adminAuthMiddleware } from './middlewares/adminAuth'
@@ -39,6 +40,7 @@ app.use('/admin', adminAuthMiddleware)
 app.use('/admin/api/users', adminUserRoutes)
 app.use('/admin/api/orders', adminOrderRoutes)
 app.use('/admin/api/messages', adminMessageRoutes)
+app.use('/admin/api/geru/messages', adminMessageGeRuRoutes)
 app.use('/admin/api/transactions', adminTranasctionRoutes)
 app.use('/admin/api/geru/orders', adminGeRuRoutes)
 
