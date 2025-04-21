@@ -23,7 +23,7 @@ router.post('/', async (req, res, next) => {
   try {
     const orderModel: OrderGeRuInput = {
       id: randomUUID(),
-      hint_price: '',
+      hint_price: req.body.hint_price,
       original_price: req.body.original_price,
       current_price: req.body.current_price,
       status: req.body.status,
@@ -66,6 +66,7 @@ router.put('/:id', async (req, res, next) => {
         id: req.params.id,
       },
       data: {
+        hint_price: req.body.hint_price,
         original_price: req.body.original_price,
         current_price: req.body.current_price,
         status: req.body.status,
