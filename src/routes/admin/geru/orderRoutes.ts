@@ -79,6 +79,7 @@ router.put('/:id', async (req, res, next) => {
         receiver_address: req.body.receiver_address,
         cdek_track_nr: req.body.cdek_track_nr,
         delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+        updated_at: new Date(),
       },
     })
 
@@ -108,6 +109,7 @@ router.patch('/:id', async (req, res, next) => {
       data: {
         status: req.body.status,
         delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+        updated_at: new Date(),
       },
     })
 
@@ -142,6 +144,7 @@ router.patch('/', async (req, res, next) => {
             data: {
               status: patch.status,
               delivered_at: patch.status == OrderStatusGeRu.Delivered ? new Date() : null,
+              updated_at: new Date(),
             },
           })
         )
