@@ -63,7 +63,7 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
       tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
-      extra: getErrorData(error),
+      exception: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
@@ -98,7 +98,7 @@ export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientG
       tgId: orderRecepient.tgId,
       orderCode: orderRecepient.orderCode,
       orderStatus: orderRecepient.orderStatus,
-      extra: getErrorData(error),
+      exception: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
@@ -115,7 +115,7 @@ export async function sendBonusAppliedMessage(tgId: string, orderCode: number, n
     const extra = {
       tgId,
       orderCode,
-      extra: getErrorData(error),
+      exception: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
@@ -139,7 +139,7 @@ export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRece
     const extra = {
       tgId: cashbackRecepient.tgId,
       orderCode: cashbackRecepient.orderCode,
-      extra: getErrorData(error),
+      exception: getErrorData(error),
     }
 
     await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
