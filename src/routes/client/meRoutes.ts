@@ -1,11 +1,30 @@
 import express from 'express'
+import httpStatusCodes from '../../constants/httpStatusCodes'
 import { PrismaClient } from '@prisma/client'
-import { createUser, getInviter, User } from '../services/user'
+import { createUser, getInviter, User } from '../../services/user'
 import { randomUUID } from 'crypto'
-import { generateReferralCode } from '../utils/referralCode'
+import { generateReferralCode } from '../../utils/referralCode'
 
 const prisma = new PrismaClient()
 const router = express.Router()
+
+router.get('/', async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        tg_id: res.locals.tgId,
+      },
+    })
+
+    if (user) {
+      return res.json(user)
+    }
+
+    return res.sendStatus(httpStatusCodes.notFound)
+  } catch (ex) {
+    next(ex)
+  }
+})
 
 router.post('/', async (req, res, next) => {
   try {

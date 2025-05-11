@@ -1,9 +1,8 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
-import meRoutes from './routes/meRoutes'
-import orderRoutes from './routes/orderRoutes'
-import userRoutes from './routes/userRoutes'
+import clientMeRoutes from './routes/client/meRoutes'
+import clientOrderRoutes from './routes/client/orderRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminGeRuRoutes from './routes/admin/geru/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
@@ -30,22 +29,23 @@ const port = 3001
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
 app.use('/', logMiddleware)
-app.use('/api', clientAuthMiddleware)
-app.use('/api/me', meRoutes)
-app.use('/api/orders', orderRoutes)
-app.use('/api/users', userRoutes)
+app.use('/api/client', clientAuthMiddleware)
+app.use('/api/admin', adminAuthMiddleware)
 
-app.use('/admin', adminAuthMiddleware)
-app.use('/admin/api/users', adminUserRoutes)
-app.use('/admin/api/orders', adminOrderRoutes)
-app.use('/admin/api/messages', adminMessageRoutes)
-app.use('/admin/api/geru/messages', adminMessageGeRuRoutes)
-app.use('/admin/api/transactions', adminTranasctionRoutes)
-app.use('/admin/api/geru/orders', adminGeRuRoutes)
+app.use('/api/client/me', clientMeRoutes)
+app.use('/api/client/orders', clientOrderRoutes)
 
-app.use('/public/api/orders', publicOrderRoutes)
-app.use('/public/api/geru/orders', publicOrderGeRuRoutes)
+app.use('/api/admin/users', adminUserRoutes)
+app.use('/api/admin/orders', adminOrderRoutes)
+app.use('/api/admin/messages', adminMessageRoutes)
+app.use('/api/admin/geru/messages', adminMessageGeRuRoutes)
+app.use('/api/admin/transactions', adminTranasctionRoutes)
+app.use('/api/admin/geru/orders', adminGeRuRoutes)
+
+app.use('/api/public/orders', publicOrderRoutes)
+app.use('/api/public/geru/orders', publicOrderGeRuRoutes)
 
 app.use(errorMiddleware)
 
