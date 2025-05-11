@@ -20,6 +20,10 @@ import cron from 'node-cron'
 import { exec } from 'child_process'
 import fs from 'fs'
 import { google } from 'googleapis'
+import { getErrorData } from './utils/error'
+import { log } from './utils/log'
+import { randomUUID } from 'crypto'
+import { LogLevel } from './models/log.model'
 
 dotenv.config()
 
@@ -64,12 +68,18 @@ if (process.env.ENVIRONMENT == 'prod') {
     const command = `pg_dump -F c -f ${filePath} -d ${connectionString}`
 
     exec(command, async (error, stdout, stderr) => {
+      const correlationId = randomUUID()
+
       try {
         if (error) {
-          console.log(`Backup failed: ${error}`)
+          const extra = {
+            exception: getErrorData(error as Error),
+          }
+
+          await log(correlationId, LogLevel.ERROR, 'Backup failed', extra)
           return
         } else {
-          console.log(`Backup created: ${filePath}`)
+          await log(correlationId, LogLevel.INFO, `Backup created: ${filePath}`)
 
           const auth = new google.auth.GoogleAuth({
             scopes: 'https://www.googleapis.com/auth/drive',
@@ -94,10 +104,14 @@ if (process.env.ENVIRONMENT == 'prod') {
             fields: 'id',
           })
 
-          console.log(`Backup uploaded: ${fileName}`)
+          await log(correlationId, LogLevel.INFO, `Backup uploaded: ${fileName}`)
         }
       } catch (ex) {
-        console.log(`Could not upload backup file: ${ex}`)
+        const extra = {
+          exception: getErrorData(ex as Error),
+        }
+
+        await log(correlationId, LogLevel.ERROR, 'Could not upload backup file', extra)
       }
     })
   })
