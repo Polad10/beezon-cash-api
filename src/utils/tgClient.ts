@@ -2,6 +2,10 @@ import { StringSession } from 'telegram/sessions'
 import { TelegramClient } from 'telegram'
 import readline from 'readline'
 import fs from 'fs'
+import { getErrorData } from './error'
+import { log } from './log'
+import { randomUUID } from 'crypto'
+import { LogLevel } from '../models/log.model'
 
 const tgApiId = Number(process.env.TG_API_ID)
 const tgApiHash = String(process.env.TG_API_HASH)
@@ -22,7 +26,14 @@ tgClient
     phoneNumber: async () => new Promise((resolve) => rl.question('Please enter your number: ', resolve)),
     password: async () => new Promise((resolve) => rl.question('Please enter your password: ', resolve)),
     phoneCode: async () => new Promise((resolve) => rl.question('Please enter the code you received: ', resolve)),
-    onError: (err) => console.log(err),
+    onError: async (error) => {
+      const extra = {
+        exception: getErrorData(error),
+      }
+
+      await log(randomUUID(), LogLevel.ERROR, "Couldn't initialize tg client.", extra)
+      return true
+    },
   })
   .then((result) => {
     fs.writeFileSync(sessionFile, stringSession.save())
