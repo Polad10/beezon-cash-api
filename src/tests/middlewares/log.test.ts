@@ -20,7 +20,7 @@ describe('logMiddleware tests', () => {
 		} as any
 
 		const res = {
-			locals: vi.fn().mockResolvedValue({}),
+			locals: {},
 		} as any
 
 		await logMiddleware(req, res, () => {})
