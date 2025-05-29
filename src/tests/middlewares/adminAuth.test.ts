@@ -27,7 +27,7 @@ describe('adminAuthMiddleware tests', () => {
 
 		await adminAuthMiddleware(req, res, () => {})
 
-		expect(res.status).toBeCalledWith(httpStatusCodes.badRequest)
+		expect(res.status).toBeCalledWith(httpStatusCodes.unauthorized)
 		expect(res.send).toBeCalled()
 	})
 
