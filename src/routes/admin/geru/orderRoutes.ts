@@ -10,207 +10,210 @@ const prisma = new PrismaClient()
 const router = express.Router()
 
 router.get('/', async (req, res, next) => {
-  try {
-    const orders = await prisma.order_ge_ru.findMany()
+	try {
+		const orders = await prisma.order_ge_ru.findMany()
 
-    res.json(orders)
-  } catch (ex) {
-    next(ex)
-  }
+		res.json(orders)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 router.post('/', async (req, res, next) => {
-  try {
-    const orderModel: OrderGeRuInput = {
-      id: randomUUID(),
-      hint_price: req.body.hint_price,
-      original_price: req.body.original_price,
-      current_price: req.body.current_price,
-      status: req.body.status,
-      user_id: req.body.user_id,
-      description: req.body.description,
-      weight: req.body.weight,
-      weight_rounded: req.body.weight_rounded,
-      receiver_name: req.body.receiver_name,
-      receiver_phone_nr: req.body.receiver_phone_nr,
-      receiver_address: req.body.receiver_address,
-      cdek_track_nr: req.body.cdek_track_nr,
-      delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
-    }
+	try {
+		const orderModel: OrderGeRuInput = {
+			id: randomUUID(),
+			hint_price: req.body.hint_price,
+			original_price: req.body.original_price,
+			current_price: req.body.current_price,
+			status: req.body.status,
+			user_id: req.body.user_id,
+			description: req.body.description,
+			weight: req.body.weight,
+			weight_rounded: req.body.weight_rounded,
+			receiver_name: req.body.receiver_name,
+			receiver_phone_nr: req.body.receiver_phone_nr,
+			receiver_address: req.body.receiver_address,
+			cdek_track_nr: req.body.cdek_track_nr,
+			delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
+			payment_method: req.body.payment_method,
+		}
 
-    const order = await prisma.order_ge_ru.create({
-      data: orderModel,
-    })
+		const order = await prisma.order_ge_ru.create({
+			data: orderModel,
+		})
 
-    const orderWithUser = await getOrder(prisma, order.id)
+		const orderWithUser = await getOrder(prisma, order.id)
 
-    if (req.body.send_notification) {
-      sendStageUpdateGeRuMessage({
-        tgId: orderWithUser.user.tg_id,
-        orderCode: orderWithUser.code,
-        orderStatus: orderWithUser.status,
-        cdekTrackNr: orderWithUser.cdek_track_nr!,
-      })
-    }
+		if (req.body.send_notification) {
+			sendStageUpdateGeRuMessage({
+				tgId: orderWithUser.user.tg_id,
+				orderCode: orderWithUser.code,
+				orderStatus: orderWithUser.status,
+				cdekTrackNr: orderWithUser.cdek_track_nr!,
+			})
+		}
 
-    res.json(order)
-  } catch (ex) {
-    next(ex)
-  }
+		res.json(order)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 router.put('/:id', async (req, res, next) => {
-  try {
-    const order = await prisma.order_ge_ru.update({
-      where: {
-        id: req.params.id,
-      },
-      data: {
-        hint_price: req.body.hint_price,
-        original_price: req.body.original_price,
-        current_price: req.body.current_price,
-        status: req.body.status,
-        user_id: req.body.user_id,
-        description: req.body.description,
-        weight: req.body.weight,
-        weight_rounded: req.body.weight_rounded,
-        receiver_name: req.body.receiver_name,
-        receiver_phone_nr: req.body.receiver_phone_nr,
-        receiver_address: req.body.receiver_address,
-        cdek_track_nr: req.body.cdek_track_nr,
-        delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
-        updated_at: new Date(),
-      },
-    })
+	try {
+		const order = await prisma.order_ge_ru.update({
+			where: {
+				id: req.params.id,
+			},
+			data: {
+				hint_price: req.body.hint_price,
+				original_price: req.body.original_price,
+				current_price: req.body.current_price,
+				status: req.body.status,
+				user_id: req.body.user_id,
+				description: req.body.description,
+				weight: req.body.weight,
+				weight_rounded: req.body.weight_rounded,
+				receiver_name: req.body.receiver_name,
+				receiver_phone_nr: req.body.receiver_phone_nr,
+				receiver_address: req.body.receiver_address,
+				cdek_track_nr: req.body.cdek_track_nr,
+				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+				updated_at: new Date(),
+				payment_method: req.body.payment_method,
+			},
+		})
 
-    const orderWithUser = await getOrder(prisma, order.id)
+		const orderWithUser = await getOrder(prisma, order.id)
 
-    if (req.body.send_notification) {
-      sendStageUpdateGeRuMessage({
-        tgId: orderWithUser.user.tg_id,
-        orderCode: orderWithUser.code,
-        orderStatus: orderWithUser.status,
-        cdekTrackNr: orderWithUser.cdek_track_nr!,
-      })
-    }
+		if (req.body.send_notification) {
+			sendStageUpdateGeRuMessage({
+				tgId: orderWithUser.user.tg_id,
+				orderCode: orderWithUser.code,
+				orderStatus: orderWithUser.status,
+				cdekTrackNr: orderWithUser.cdek_track_nr!,
+			})
+		}
 
-    res.json(order)
-  } catch (ex) {
-    next(ex)
-  }
+		res.json(order)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 router.patch('/:id', async (req, res, next) => {
-  try {
-    const order = await prisma.order_ge_ru.update({
-      where: {
-        id: req.params.id,
-      },
-      data: {
-        status: req.body.status,
-        delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
-        updated_at: new Date(),
-      },
-    })
+	try {
+		const order = await prisma.order_ge_ru.update({
+			where: {
+				id: req.params.id,
+			},
+			data: {
+				status: req.body.status,
+				payment_method: req.body.payment_method,
+				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+				updated_at: new Date(),
+			},
+		})
 
-    const orderWithUser = await getOrder(prisma, order.id)
+		const orderWithUser = await getOrder(prisma, order.id)
 
-    if (req.body.send_notification) {
-      sendStageUpdateGeRuMessage({
-        tgId: orderWithUser.user.tg_id,
-        orderCode: orderWithUser.code,
-        orderStatus: orderWithUser.status,
-        cdekTrackNr: orderWithUser.cdek_track_nr!,
-      })
-    }
+		if (req.body.send_notification) {
+			sendStageUpdateGeRuMessage({
+				tgId: orderWithUser.user.tg_id,
+				orderCode: orderWithUser.code,
+				orderStatus: orderWithUser.status,
+				cdekTrackNr: orderWithUser.cdek_track_nr!,
+			})
+		}
 
-    res.json(order)
-  } catch (ex) {
-    next(ex)
-  }
+		res.json(order)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 router.patch('/', async (req, res, next) => {
-  try {
-    const patches: { id: string; status: OrderStatusGeRu }[] = req.body.patches
+	try {
+		const patches: { id: string; status: OrderStatusGeRu }[] = req.body.patches
 
-    const orders = await prisma.$transaction(async (prisma: any) => {
-      const orders = await Promise.all(
-        patches.map((patch) =>
-          prisma.order_ge_ru.update({
-            where: {
-              id: patch.id,
-            },
-            data: {
-              status: patch.status,
-              delivered_at: patch.status == OrderStatusGeRu.Delivered ? new Date() : null,
-              updated_at: new Date(),
-            },
-          })
-        )
-      )
+		const orders = await prisma.$transaction(async (prisma: any) => {
+			const orders = await Promise.all(
+				patches.map((patch) =>
+					prisma.order_ge_ru.update({
+						where: {
+							id: patch.id,
+						},
+						data: {
+							status: patch.status,
+							delivered_at: patch.status == OrderStatusGeRu.Delivered ? new Date() : null,
+							updated_at: new Date(),
+						},
+					})
+				)
+			)
 
-      return orders
-    })
+			return orders
+		})
 
-    const ordersWithUser: any[] = await getOrders(
-      prisma,
-      patches.map((patch) => patch.id)
-    )
+		const ordersWithUser: any[] = await getOrders(
+			prisma,
+			patches.map((patch) => patch.id)
+		)
 
-    if (req.body.send_notification) {
-      const orderRecepients: OrderRecepientGeRu[] = ordersWithUser.map((order) => ({
-        tgId: order.user.tg_id,
-        orderCode: order.code,
-        orderStatus: order.status,
-        cdekTrackNr: order.cdek_track_nr!,
-      }))
+		if (req.body.send_notification) {
+			const orderRecepients: OrderRecepientGeRu[] = ordersWithUser.map((order) => ({
+				tgId: order.user.tg_id,
+				orderCode: order.code,
+				orderStatus: order.status,
+				cdekTrackNr: order.cdek_track_nr!,
+			}))
 
-      sendStageUpdateGeRuMessages(orderRecepients)
-    }
+			sendStageUpdateGeRuMessages(orderRecepients)
+		}
 
-    res.json(ordersWithUser)
-  } catch (ex) {
-    next(ex)
-  }
+		res.json(ordersWithUser)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 router.delete('/:id', async (req, res, next) => {
-  try {
-    await prisma.order_ge_ru.delete({
-      where: {
-        id: req.params.id,
-      },
-    })
+	try {
+		await prisma.order_ge_ru.delete({
+			where: {
+				id: req.params.id,
+			},
+		})
 
-    res.sendStatus(httpStatusCodes.ok)
-  } catch (ex) {
-    next(ex)
-  }
+		res.sendStatus(httpStatusCodes.ok)
+	} catch (ex) {
+		next(ex)
+	}
 })
 
 async function getOrder(prisma: any, id: string) {
-  return await prisma.order_ge_ru.findUnique({
-    where: {
-      id: id,
-    },
-    include: {
-      user: true,
-    },
-  })
+	return await prisma.order_ge_ru.findUnique({
+		where: {
+			id: id,
+		},
+		include: {
+			user: true,
+		},
+	})
 }
 
 async function getOrders(prisma: any, ids: string[]) {
-  return await prisma.order_ge_ru.findMany({
-    where: {
-      id: {
-        in: ids,
-      },
-    },
-    include: {
-      user: true,
-    },
-  })
+	return await prisma.order_ge_ru.findMany({
+		where: {
+			id: {
+				in: ids,
+			},
+		},
+		include: {
+			user: true,
+		},
+	})
 }
 
 export default router

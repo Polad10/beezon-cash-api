@@ -15,6 +15,13 @@ enum OrderStatusGeRu {
   Delivered
 }
 
+enum PaymentMethod {
+  NotPaid
+  TBC
+  Tinkoff
+  Cash
+}
+
 model order {
   id                  String               @id(map: "order_pk") @db.Uuid
   date                DateTime             @default(now())
@@ -34,6 +41,7 @@ model order {
   order_city          city                 @relation("order_cityTocity", fields: [city], references: [id], onDelete: Restrict, map: "order_city_fk")
   order_status        order_status         @relation(fields: [status], references: [id], onDelete: Restrict, map: "status_fk")
   user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
+  payment_method      PaymentMethod        @default(NotPaid)
   order_tracks        order_track[]
   order_type_mappings order_type_mapping[]
 }
@@ -57,6 +65,7 @@ model order_ge_ru {
   updated_at        DateTime        @default(now())
   delivered_at      DateTime?
   user              user            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
+  payment_method    PaymentMethod   @default(NotPaid)
 }
 
 model order_status {
