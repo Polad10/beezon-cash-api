@@ -1,5 +1,5 @@
 import express from 'express'
-import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
+import { OrderStatusGeRu, PaymentMethod, PrismaClient } from '@prisma/client'
 import { OrderGeRuInput } from '../../../models/OrderGeRuInput'
 import { randomUUID } from 'crypto'
 import { sendStageUpdateGeRuMessage, sendStageUpdateGeRuMessages } from '../../../utils/notification'
@@ -36,7 +36,6 @@ router.post('/', async (req, res, next) => {
 			receiver_address: req.body.receiver_address,
 			cdek_track_nr: req.body.cdek_track_nr,
 			delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
-			payment_method: req.body.payment_method,
 		}
 
 		const order = await prisma.order_ge_ru.create({
@@ -81,7 +80,6 @@ router.put('/:id', async (req, res, next) => {
 				cdek_track_nr: req.body.cdek_track_nr,
 				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
 				updated_at: new Date(),
-				payment_method: req.body.payment_method,
 			},
 		})
 
@@ -112,6 +110,7 @@ router.patch('/:id', async (req, res, next) => {
 				status: req.body.status,
 				payment_method: req.body.payment_method,
 				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+				payment_date: !req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
 				updated_at: new Date(),
 			},
 		})

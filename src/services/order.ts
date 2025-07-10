@@ -21,7 +21,6 @@ export interface Order {
 	additional_cost?: Decimal
 	partner_cost?: Decimal
 	description: string
-	payment_method?: PaymentMethod
 }
 
 export async function createOrder(

@@ -1,5 +1,5 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { PaymentMethod, PrismaClient } from '@prisma/client'
 import httpStatusCodes from '../../constants/httpStatusCodes'
 import { randomUUID } from 'crypto'
 import { City } from '../../enums/City'
@@ -55,7 +55,6 @@ router.post('/', async (req, res, next) => {
 				status: req.body.status,
 				city: req.body.city || City.Other,
 				end_date: req.body.status == OrderStatus.Delivered ? new Date() : undefined,
-				payment_method: req.body.payment_method,
 			}
 
 			const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
@@ -110,7 +109,6 @@ router.put('/:id', async (req, res, next) => {
 					status: req.body.status,
 					city: req.body.city,
 					end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
-					payment_method: req.body.payment_method,
 				},
 			})
 
@@ -159,6 +157,8 @@ router.patch('/:id', async (req, res, next) => {
 					status: req.body.status,
 					payment_method: req.body.payment_method,
 					end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
+					payment_date:
+						!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
 				},
 			})
 
