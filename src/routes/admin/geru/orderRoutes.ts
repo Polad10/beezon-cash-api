@@ -36,6 +36,9 @@ router.post('/', async (req, res, next) => {
 			receiver_address: req.body.receiver_address,
 			cdek_track_nr: req.body.cdek_track_nr,
 			delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : undefined,
+			payment_method: req.body.payment_method,
+			payment_date:
+				!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? undefined : new Date(),
 		}
 
 		const order = await prisma.order_ge_ru.create({
@@ -79,6 +82,8 @@ router.put('/:id', async (req, res, next) => {
 				receiver_address: req.body.receiver_address,
 				cdek_track_nr: req.body.cdek_track_nr,
 				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
+				payment_method: req.body.payment_method,
+				payment_date: !req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
 				updated_at: new Date(),
 			},
 		})

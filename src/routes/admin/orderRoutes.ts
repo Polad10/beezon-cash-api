@@ -55,6 +55,9 @@ router.post('/', async (req, res, next) => {
 				status: req.body.status,
 				city: req.body.city || City.Other,
 				end_date: req.body.status == OrderStatus.Delivered ? new Date() : undefined,
+				payment_method: req.body.payment_method,
+				payment_date:
+					!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? undefined : new Date(),
 			}
 
 			const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
@@ -109,6 +112,9 @@ router.put('/:id', async (req, res, next) => {
 					status: req.body.status,
 					city: req.body.city,
 					end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
+					payment_method: req.body.payment_method,
+					payment_date:
+						!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
 				},
 			})
 

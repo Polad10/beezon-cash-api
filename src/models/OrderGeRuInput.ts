@@ -18,4 +18,6 @@ export interface OrderGeRuInput {
 	created_at?: Date
 	updated_at?: Date
 	delivered_at?: Date
+	payment_method?: PaymentMethod
+	payment_date?: Date | null
 }
