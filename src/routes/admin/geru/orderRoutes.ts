@@ -107,6 +107,17 @@ router.put('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
 	try {
+		let deliveredAt: Date | null | undefined = undefined
+		let paymentDate: Date | null | undefined = undefined
+
+		if (req.body.status) {
+			deliveredAt = req.body.status == OrderStatusGeRu.Delivered ? new Date() : null
+		}
+
+		if (req.body.payment_method) {
+			paymentDate = req.body.payment_method == PaymentMethod.NotPaid ? null : new Date()
+		}
+
 		const order = await prisma.order_ge_ru.update({
 			where: {
 				id: req.params.id,
@@ -114,8 +125,8 @@ router.patch('/:id', async (req, res, next) => {
 			data: {
 				status: req.body.status,
 				payment_method: req.body.payment_method,
-				delivered_at: req.body.status == OrderStatusGeRu.Delivered ? new Date() : null,
-				payment_date: !req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
+				delivered_at: deliveredAt,
+				payment_date: paymentDate,
 				updated_at: new Date(),
 			},
 		})

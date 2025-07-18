@@ -154,6 +154,17 @@ router.put('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
 	try {
+		let endDate: Date | null | undefined = undefined
+		let paymentDate: Date | null | undefined = undefined
+
+		if (req.body.status != null) {
+			endDate = req.body.status == OrderStatus.Delivered ? new Date() : null
+		}
+
+		if (req.body.payment_method) {
+			paymentDate = req.body.payment_method == PaymentMethod.NotPaid ? null : new Date()
+		}
+
 		const [updatedOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
 			const order = await prisma.order.update({
 				where: {
@@ -162,9 +173,8 @@ router.patch('/:id', async (req, res, next) => {
 				data: {
 					status: req.body.status,
 					payment_method: req.body.payment_method,
-					end_date: req.body.status == OrderStatus.Delivered ? new Date() : null,
-					payment_date:
-						!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
+					end_date: endDate,
+					payment_date: paymentDate,
 				},
 			})
 
