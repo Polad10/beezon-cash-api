@@ -174,3 +174,8 @@ model pending_bonus {
   from_user    user    @relation("pending_bonus_from", fields: [from_user_id], references: [id], onDelete: Cascade, map: "pending_bonus_from_user_fk")
   to_user      user    @relation("pending_bonus_to", fields: [to_user_id], references: [id], onDelete: Cascade, map: "pending_bonus_to_user_fk")
 }
+
+model setting {
+  id            Int     @id(map: "setting_pk") @default(autoincrement())
+  exchange_rate Decimal @db.Decimal(8, 2)
+}
