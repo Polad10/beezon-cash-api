@@ -3,17 +3,18 @@ import { OrderStatus } from '../enums/OrderStatus'
 import { OrderStatusGeRu } from '@prisma/client'
 
 export interface OrderRecepient {
-  tgId: string
-  orderCode: number
-  orderStatus: OrderStatus
-  weight: Decimal
-  deliveryPrice: Decimal
-  ponyPrice: Decimal
+	tgId: string
+	orderCode: number
+	orderStatus: OrderStatus
+	weight: Decimal
+	deliveryPrice: Decimal
+	ponyPrice: Decimal
+	exchangeRate?: Decimal
 }
 
 export interface OrderRecepientGeRu {
-  tgId: string
-  orderCode: number
-  orderStatus: OrderStatusGeRu
-  cdekTrackNr: string
+	tgId: string
+	orderCode: number
+	orderStatus: OrderStatusGeRu
+	cdekTrackNr: string
 }

@@ -14,138 +14,144 @@ import { getErrorData } from './error'
 const prisma = new PrismaClient()
 
 export async function sendStageUpdateMessages(orderRecepients: OrderRecepient[]) {
-  for (const orderRecepient of orderRecepients) {
-    await sendStageUpdateMessage(orderRecepient)
-    await setTimeout(5000)
-  }
+	for (const orderRecepient of orderRecepients) {
+		await sendStageUpdateMessage(orderRecepient)
+		await setTimeout(5000)
+	}
 }
 
 export async function sendStageUpdateGeRuMessages(orderRecepients: OrderRecepientGeRu[]) {
-  for (const orderRecepient of orderRecepients) {
-    await sendStageUpdateGeRuMessage(orderRecepient)
-    await setTimeout(5000)
-  }
+	for (const orderRecepient of orderRecepients) {
+		await sendStageUpdateGeRuMessage(orderRecepient)
+		await setTimeout(5000)
+	}
 }
 
 export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
-  try {
-    let message: string | undefined = undefined
+	try {
+		let message: string | undefined = undefined
 
-    if (orderRecepient.orderStatus == OrderStatus.New) {
-      const templateText = (await prisma.message.findUnique({ where: { order_status: OrderStatus.New } }))?.text
-      const template = Handlebars.compile(templateText)
-      message = template({ orderCode: orderRecepient.orderCode })
-    } else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
-      const templateText = (
-        await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryInTbilisi } })
-      )?.text
-      const template = Handlebars.compile(templateText)
-      message = template({ weight: orderRecepient.weight, deliveryPrice: orderRecepient.deliveryPrice })
-    } else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryByPony) {
-      const templateText = (
-        await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryByPony } })
-      )?.text
-      const template = Handlebars.compile(templateText)
-      message = template({
-        weight: orderRecepient.weight,
-        deliveryPrice: orderRecepient.deliveryPrice,
-        ponyPrice: orderRecepient.ponyPrice,
-      })
-    }
+		if (orderRecepient.orderStatus == OrderStatus.New) {
+			const templateText = (await prisma.message.findUnique({ where: { order_status: OrderStatus.New } }))?.text
+			const template = Handlebars.compile(templateText)
+			message = template({ orderCode: orderRecepient.orderCode })
+		} else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
+			const templateText = (
+				await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryInTbilisi } })
+			)?.text
 
-    if (message) {
-      await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
-    }
-  } catch (ex) {
-    const error = ex as Error
+			const template = Handlebars.compile(templateText)
+			message = template({
+				weight: orderRecepient.weight,
+				deliveryPrice: orderRecepient.deliveryPrice,
+				exchangeRate: orderRecepient.exchangeRate,
+			})
+		} else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryByPony) {
+			const templateText = (
+				await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryByPony } })
+			)?.text
+			const template = Handlebars.compile(templateText)
+			message = template({
+				weight: orderRecepient.weight,
+				deliveryPrice: orderRecepient.deliveryPrice,
+				ponyPrice: orderRecepient.ponyPrice,
+				exchangeRate: orderRecepient.exchangeRate,
+			})
+		}
 
-    const extra = {
-      tgId: orderRecepient.tgId,
-      orderCode: orderRecepient.orderCode,
-      orderStatus: orderRecepient.orderStatus,
-      exception: getErrorData(error),
-    }
+		if (message) {
+			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
+		}
+	} catch (ex) {
+		const error = ex as Error
 
-    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
-  }
+		const extra = {
+			tgId: orderRecepient.tgId,
+			orderCode: orderRecepient.orderCode,
+			orderStatus: orderRecepient.orderStatus,
+			exception: getErrorData(error),
+		}
+
+		await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
+	}
 }
 
 export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientGeRu) {
-  try {
-    let message: string | undefined = undefined
+	try {
+		let message: string | undefined = undefined
 
-    if (orderRecepient.orderStatus == OrderStatusGeRu.InvoiceCreated) {
-      const templateText = (
-        await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.InvoiceCreated } })
-      )?.text
-      const template = Handlebars.compile(templateText)
-      message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
-    } else if (orderRecepient.orderStatus == OrderStatusGeRu.DrivingInRf) {
-      const templateText = (
-        await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.DrivingInRf } })
-      )?.text
-      const template = Handlebars.compile(templateText)
-      message = template({ orderTrackNumber: orderRecepient.cdekTrackNr })
-    }
+		if (orderRecepient.orderStatus == OrderStatusGeRu.InvoiceCreated) {
+			const templateText = (
+				await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.InvoiceCreated } })
+			)?.text
+			const template = Handlebars.compile(templateText)
+			message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
+		} else if (orderRecepient.orderStatus == OrderStatusGeRu.DrivingInRf) {
+			const templateText = (
+				await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.DrivingInRf } })
+			)?.text
+			const template = Handlebars.compile(templateText)
+			message = template({ orderTrackNumber: orderRecepient.cdekTrackNr })
+		}
 
-    if (message) {
-      await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
-    }
-  } catch (ex) {
-    const error = ex as Error
+		if (message) {
+			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
+		}
+	} catch (ex) {
+		const error = ex as Error
 
-    const extra = {
-      tgId: orderRecepient.tgId,
-      orderCode: orderRecepient.orderCode,
-      orderStatus: orderRecepient.orderStatus,
-      exception: getErrorData(error),
-    }
+		const extra = {
+			tgId: orderRecepient.tgId,
+			orderCode: orderRecepient.orderCode,
+			orderStatus: orderRecepient.orderStatus,
+			exception: getErrorData(error),
+		}
 
-    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
-  }
+		await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
+	}
 }
 
 export async function sendBonusAppliedMessage(tgId: string, orderCode: number, newPrice: Decimal) {
-  try {
-    const message = `Бонусные баллы применены для заказа #${orderCode}! Новая стоимость доставки: ${newPrice} ₾`
-    await sendMessage(tgId, message, orderCode)
-  } catch (ex) {
-    const error = ex as Error
+	try {
+		const message = `Бонусные баллы применены для заказа #${orderCode}! Новая стоимость доставки: ${newPrice} ₾`
+		await sendMessage(tgId, message, orderCode)
+	} catch (ex) {
+		const error = ex as Error
 
-    const extra = {
-      tgId,
-      orderCode,
-      exception: getErrorData(error),
-    }
+		const extra = {
+			tgId,
+			orderCode,
+			exception: getErrorData(error),
+		}
 
-    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
-  }
+		await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
+	}
 }
 
 export async function sendCashbackAppliedMessages(cashbackRecepients: CashbackRecepient[]) {
-  for (const cashbackRecepient of cashbackRecepients) {
-    await sendCashbackAppliedMessage(cashbackRecepient)
-    await setTimeout(5000)
-  }
+	for (const cashbackRecepient of cashbackRecepients) {
+		await sendCashbackAppliedMessage(cashbackRecepient)
+		await setTimeout(5000)
+	}
 }
 
 export async function sendCashbackAppliedMessage(cashbackRecepient: CashbackRecepient) {
-  try {
-    const message = `На ваш баланс начислен кэшбек: +${cashbackRecepient.cashback} ₾`
-    await sendMessage(cashbackRecepient.tgId, message, cashbackRecepient.orderCode)
-  } catch (ex) {
-    const error = ex as Error
+	try {
+		const message = `На ваш баланс начислен кэшбек: +${cashbackRecepient.cashback} ₾`
+		await sendMessage(cashbackRecepient.tgId, message, cashbackRecepient.orderCode)
+	} catch (ex) {
+		const error = ex as Error
 
-    const extra = {
-      tgId: cashbackRecepient.tgId,
-      orderCode: cashbackRecepient.orderCode,
-      exception: getErrorData(error),
-    }
+		const extra = {
+			tgId: cashbackRecepient.tgId,
+			orderCode: cashbackRecepient.orderCode,
+			exception: getErrorData(error),
+		}
 
-    await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
-  }
+		await log(randomUUID(), LogLevel.ERROR, "Couldn't send a bonus applied notification.", extra)
+	}
 }
 
 export async function sendMessage(tgId: string, message: string, orderCode: number) {
-  await tgClient.sendMessage(tgId, { message: message, parseMode: 'html', linkPreview: false })
+	await tgClient.sendMessage(tgId, { message: message, parseMode: 'html', linkPreview: false })
 }

@@ -76,6 +76,7 @@ router.post('/', async (req, res, next) => {
 				weight: createdOrder.weight,
 				deliveryPrice: createdOrder.current_price,
 				ponyPrice: createdOrder.partner_cost,
+				exchangeRate: createdOrder.exchange_rate,
 			})
 
 			if (stageResult?.cashback) {
@@ -144,6 +145,7 @@ router.put('/:id', async (req, res, next) => {
 				weight: updatedOrder.weight,
 				deliveryPrice: updatedOrder.current_price,
 				ponyPrice: updatedOrder.partner_cost,
+				exchangeRate: updatedOrder.exchange_rate,
 			})
 
 			if (stageResult?.cashback) {
@@ -214,6 +216,7 @@ router.patch('/:id', async (req, res, next) => {
 				weight: updatedOrder.weight,
 				deliveryPrice: updatedOrder.current_price,
 				ponyPrice: updatedOrder.partner_cost,
+				exchangeRate: updatedOrder.exchange_rate,
 			})
 
 			if (stageResult?.cashback) {
@@ -262,8 +265,6 @@ router.patch('/', async (req, res, next) => {
 							exchange_rate: settings.exchange_rate,
 						},
 					})
-
-					order.exchange_rate = settings.exchange_rate
 				}
 			}
 
@@ -285,6 +286,7 @@ router.patch('/', async (req, res, next) => {
 				weight: order.weight,
 				deliveryPrice: order.current_price,
 				ponyPrice: order.partner_cost,
+				exchangeRate: order.exchange_rate,
 			}))
 
 			sendStageUpdateMessages(orderRecepients)
