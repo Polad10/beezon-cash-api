@@ -58,6 +58,7 @@ router.post('/', async (req, res, next) => {
 				payment_method: req.body.payment_method,
 				payment_date:
 					!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? undefined : new Date(),
+				exchange_rate: req.body.exchange_rate,
 			}
 
 			const order = await createOrder(prisma, orderModel, req.body.order_type_mappings, req.body.order_tracks)
@@ -95,6 +96,13 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
 	try {
 		const [updatedOrder, stageResult] = await prisma.$transaction(async (prisma: any) => {
+			let exchange_rate = req.body.exchange_rate
+
+			if (!exchange_rate && req.body.status && req.body.status > OrderStatus.ProcessedInTbilisi) {
+				const settings = await prisma.setting.findFirst()
+				exchange_rate = settings.exchange_rate
+			}
+
 			const order = await prisma.order.update({
 				where: {
 					id: req.params.id,
@@ -115,6 +123,7 @@ router.put('/:id', async (req, res, next) => {
 					payment_method: req.body.payment_method,
 					payment_date:
 						!req.body.payment_method || req.body.payment_method == PaymentMethod.NotPaid ? null : new Date(),
+					exchange_rate: exchange_rate,
 				},
 			})
 
@@ -178,6 +187,19 @@ router.patch('/:id', async (req, res, next) => {
 				},
 			})
 
+			if (!order.exchange_rate && order.status && order.status > OrderStatus.ProcessedInTbilisi) {
+				const settings = await prisma.setting.findFirst()
+
+				await prisma.order.update({
+					where: {
+						id: req.params.id,
+					},
+					data: {
+						exchange_rate: settings.exchange_rate,
+					},
+				})
+			}
+
 			const stageResult = await processStage(prisma, order)
 			const updatedOrder = await getOrder(prisma, req.params.id)
 
@@ -227,6 +249,23 @@ router.patch('/', async (req, res, next) => {
 					})
 				)
 			)
+
+			const settings = await prisma.setting.findFirst()
+
+			for (const order of orders) {
+				if (!order.exchange_rate && order.status && order.status > OrderStatus.ProcessedInTbilisi) {
+					await prisma.order.update({
+						where: {
+							id: order.id,
+						},
+						data: {
+							exchange_rate: settings.exchange_rate,
+						},
+					})
+
+					order.exchange_rate = settings.exchange_rate
+				}
+			}
 
 			const stageResults = await processStages(prisma, orders)
 

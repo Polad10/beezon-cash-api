@@ -43,6 +43,7 @@ model order {
   user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
   payment_method      PaymentMethod        @default(NotPaid)
   payment_date        DateTime?
+  exchange_rate       Decimal?
   order_tracks        order_track[]
   order_type_mappings order_type_mapping[]
 }

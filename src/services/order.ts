@@ -23,6 +23,7 @@ export interface Order {
 	description: string
 	payment_method?: PaymentMethod
 	payment_date?: Date | null
+	exchange_rate?: Decimal
 }
 
 export async function createOrder(
@@ -31,6 +32,11 @@ export async function createOrder(
 	order_type_mappings: OrderTypeMapping[],
 	order_tracks: OrderTrack[]
 ) {
+	if (!order.exchange_rate && order.status && order.status > OrderStatus.ProcessedInTbilisi) {
+		const settings = await prisma.setting.findFirst()
+		order.exchange_rate = settings.exchange_rate
+	}
+
 	const createdOrder = await prisma.order.create({
 		data: order,
 	})
