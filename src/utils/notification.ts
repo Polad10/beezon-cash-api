@@ -44,6 +44,7 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 			message = template({
 				weight: orderRecepient.weight,
 				deliveryPrice: orderRecepient.deliveryPrice,
+				deliveryPriceRub: orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate!),
 				exchangeRate: orderRecepient.exchangeRate,
 			})
 		} else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryByPony) {
@@ -54,6 +55,7 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 			message = template({
 				weight: orderRecepient.weight,
 				deliveryPrice: orderRecepient.deliveryPrice,
+				deliveryPriceRub: orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate!),
 				ponyPrice: orderRecepient.ponyPrice,
 				exchangeRate: orderRecepient.exchangeRate,
 			})
