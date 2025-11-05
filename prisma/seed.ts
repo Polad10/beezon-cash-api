@@ -149,6 +149,15 @@ async function fillDeliveryProviderTable() {
 			name: 'Cold',
 		},
 	})
+
+	await prisma.delivery_provider.upsert({
+		where: { name: 'AptekaRu' },
+		update: {},
+		create: {
+			id: 8,
+			name: 'AptekaRu',
+		},
+	})
 }
 
 async function fillOrderStatusTable() {

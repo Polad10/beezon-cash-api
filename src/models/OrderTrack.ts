@@ -19,4 +19,5 @@ export enum DeliveryProvider {
   POST5,
   DPD,
   Cold,
+  AptekaRu,
 }
