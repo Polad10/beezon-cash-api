@@ -23,29 +23,30 @@ enum PaymentMethod {
 }
 
 model order {
-  id                  String               @id(map: "order_pk") @db.Uuid
-  date                DateTime             @default(now())
-  end_date            DateTime?
-  original_price      Decimal              @default(0) @db.Decimal(8, 2)
-  current_price       Decimal              @default(0) @db.Decimal(8, 2)
-  status              Int                  @default(0)
-  bonus_received      Decimal              @default(0) @db.Decimal(8, 2)
-  user_id             String               @db.Uuid
-  code                Int                  @unique(map: "code_unique") @default(autoincrement())
-  additional_cost     Decimal              @default(0) @db.Decimal(8, 2)
-  city                Int                  @default(0)
-  description         String?
-  partner_cost        Decimal              @default(0) @db.Decimal(8, 2)
-  weight              Decimal              @default(0) @db.Decimal(8, 2)
-  weight_rounded      Boolean              @default(false)
-  order_city          city                 @relation("order_cityTocity", fields: [city], references: [id], onDelete: Restrict, map: "order_city_fk")
-  order_status        order_status         @relation(fields: [status], references: [id], onDelete: Restrict, map: "status_fk")
-  user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
-  payment_method      PaymentMethod        @default(NotPaid)
-  payment_date        DateTime?
-  exchange_rate       Decimal?
-  order_tracks        order_track[]
-  order_type_mappings order_type_mapping[]
+  id                   String               @id(map: "order_pk") @db.Uuid
+  date                 DateTime             @default(now())
+  end_date             DateTime?
+  original_price       Decimal              @default(0) @db.Decimal(8, 2)
+  current_price        Decimal              @default(0) @db.Decimal(8, 2)
+  status               Int                  @default(0)
+  bonus_received       Decimal              @default(0) @db.Decimal(8, 2)
+  user_id              String               @db.Uuid
+  code                 Int                  @unique(map: "code_unique") @default(autoincrement())
+  additional_cost      Decimal              @default(0) @db.Decimal(8, 2)
+  city                 Int                  @default(0)
+  description          String?
+  partner_cost         Decimal              @default(0) @db.Decimal(8, 2)
+  partner_track_number String?
+  weight               Decimal              @default(0) @db.Decimal(8, 2)
+  weight_rounded       Boolean              @default(false)
+  order_city           city                 @relation("order_cityTocity", fields: [city], references: [id], onDelete: Restrict, map: "order_city_fk")
+  order_status         order_status         @relation(fields: [status], references: [id], onDelete: Restrict, map: "status_fk")
+  user                 user                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_fk")
+  payment_method       PaymentMethod        @default(NotPaid)
+  payment_date         DateTime?
+  exchange_rate        Decimal?
+  order_tracks         order_track[]
+  order_type_mappings  order_type_mapping[]
 }
 
 model order_ge_ru {
