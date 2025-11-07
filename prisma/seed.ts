@@ -392,6 +392,18 @@ async function fillMessageTable() {
 			order_status: OrderStatus.ReadyForDeliveryByPony,
 		},
 	})
+
+	await prisma.message.upsert({
+		where: { order_status: OrderStatus.WaitingForDeliveryByPony },
+		update: {},
+		create: {
+			id: 3,
+			name: 'Передано в DELIVO',
+			text: `Трек-номер отправления Delivo: <code>{{partnerTrackNumber}}</code> 
+Следить за статусом можно <a href="https://delivo.ge/tracking-code/?tracking-code={{partnerTrackNumber}}"><b>здесь</b></a>`,
+			order_status: OrderStatus.WaitingForDeliveryByPony,
+		},
+	})
 }
 
 async function fillMessageGeRuTable() {

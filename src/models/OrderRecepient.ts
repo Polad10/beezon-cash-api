@@ -10,6 +10,7 @@ export interface OrderRecepient {
 	deliveryPrice: Decimal
 	ponyPrice: Decimal
 	exchangeRate?: Decimal
+	partnerTrackNumber?: string
 }
 
 export interface OrderRecepientGeRu {

@@ -59,6 +59,14 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 				ponyPrice: orderRecepient.ponyPrice,
 				exchangeRate: orderRecepient.exchangeRate,
 			})
+		} else if (orderRecepient.orderStatus == OrderStatus.WaitingForDeliveryByPony) {
+			const templateText = (
+				await prisma.message.findUnique({ where: { order_status: OrderStatus.WaitingForDeliveryByPony } })
+			)?.text
+			const template = Handlebars.compile(templateText)
+			message = template({
+				partnerTrackNumber: orderRecepient.partnerTrackNumber,
+			})
 		}
 
 		if (message) {
