@@ -20,6 +20,7 @@ export interface Order {
 	weight_rounded: boolean
 	additional_cost: Decimal
 	partner_cost: Decimal
+	partner_track_number?: string
 	description: string
 	user?: User
 	exchange_rate?: Decimal
