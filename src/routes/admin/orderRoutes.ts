@@ -404,11 +404,7 @@ async function processTransactions(prisma: any, order: Order) {
 		}
 
 		if (orderTransactions.length === 0) {
-			const cashbackMultiplier = order.weight.lessThanOrEqualTo(5)
-				? 0.05
-				: order.weight.lessThanOrEqualTo(10)
-				? 0.07
-				: 0.1
+			const cashbackMultiplier = order.weight.lessThan(5) ? 0.05 : order.weight.lessThan(10) ? 0.07 : 0.1
 
 			const cashback = order.original_price.mul(cashbackMultiplier)
 			const newBalance = user.balance.add(cashback)
