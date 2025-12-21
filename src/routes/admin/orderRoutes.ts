@@ -25,7 +25,16 @@ const router = express.Router()
 
 router.get('/', async (req, res, next) => {
 	try {
+		const { startDate } = req.query
+
 		const orders = await prisma.order.findMany({
+			where: startDate
+				? {
+						date: {
+							gte: new Date(startDate as string),
+						},
+				  }
+				: undefined,
 			include: {
 				order_type_mappings: true,
 				order_tracks: true,

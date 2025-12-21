@@ -11,7 +11,17 @@ const router = express.Router()
 
 router.get('/', async (req, res, next) => {
 	try {
-		const orders = await prisma.order_ge_ru.findMany()
+		const { startDate } = req.query
+
+		const orders = await prisma.order_ge_ru.findMany({
+			where: startDate
+				? {
+						created_at: {
+							gte: new Date(startDate as string),
+						},
+				  }
+				: undefined,
+		})
 
 		res.json(orders)
 	} catch (ex) {
