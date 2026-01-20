@@ -96,6 +96,8 @@ model user {
   transaction          transaction[]
   pending_bonuses_from pending_bonus[] @relation("pending_bonus_from")
   pending_bonuses_to   pending_bonus[] @relation("pending_bonus_to")
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @default(now()) @updatedAt
 }
 
 model message {
