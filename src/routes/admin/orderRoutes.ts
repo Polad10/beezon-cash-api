@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
 						date: {
 							gte: new Date(startDate as string),
 						},
-				  }
+					}
 				: undefined,
 			include: {
 				order_type_mappings: true,
@@ -263,8 +263,8 @@ router.patch('/', async (req, res, next) => {
 							status: patch.status,
 							end_date: patch.status == OrderStatus.Delivered ? new Date() : null,
 						},
-					})
-				)
+					}),
+				),
 			)
 
 			const settings = await prisma.setting.findFirst()
@@ -286,7 +286,7 @@ router.patch('/', async (req, res, next) => {
 
 			const updatedOrders = await getOrders(
 				prisma,
-				patches.map((patch) => patch.id)
+				patches.map((patch) => patch.id),
 			)
 
 			return [updatedOrders, stageResults]
@@ -413,9 +413,7 @@ async function processTransactions(prisma: any, order: Order) {
 		}
 
 		if (orderTransactions.length === 0) {
-			const cashbackMultiplier = order.weight.lessThan(5) ? 0.05 : order.weight.lessThan(10) ? 0.07 : 0.1
-
-			const cashback = order.original_price.mul(cashbackMultiplier)
+			const cashback = order.original_price.mul(0.03)
 			const newBalance = user.balance.add(cashback)
 
 			await prisma.transaction.create({
