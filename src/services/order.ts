@@ -31,7 +31,7 @@ export async function createOrder(
 	prisma: any,
 	order: Order,
 	order_type_mappings: OrderTypeMapping[],
-	order_tracks: OrderTrack[]
+	order_tracks: OrderTrack[],
 ) {
 	if (!order.exchange_rate && order.status && order.status > OrderStatus.ProcessedInTbilisi) {
 		const settings = await prisma.setting.findFirst()
