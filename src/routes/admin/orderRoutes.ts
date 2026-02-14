@@ -19,6 +19,7 @@ import { recreateOrderTypeMappings } from '../../services/orderTypeMapping'
 import { recreateOrderTracks } from '../../services/orderTrack'
 import { User } from '../../models/User'
 import { createOrder, Order as NewOrder } from '../../services/order'
+import { getFinalPrice } from '../../utils/order'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -84,7 +85,7 @@ router.post('/', async (req, res, next) => {
 				orderCode: createdOrder.code,
 				orderStatus: createdOrder.status,
 				weight: createdOrder.weight,
-				deliveryPrice: createdOrder.current_price,
+				deliveryPrice: getFinalPrice(createdOrder),
 				ponyPrice: createdOrder.partner_cost,
 				exchangeRate: createdOrder.exchange_rate,
 				partnerTrackNumber: createdOrder.partner_track_number,
@@ -155,7 +156,7 @@ router.put('/:id', async (req, res, next) => {
 				orderCode: updatedOrder.code,
 				orderStatus: updatedOrder.status,
 				weight: updatedOrder.weight,
-				deliveryPrice: updatedOrder.current_price,
+				deliveryPrice: getFinalPrice(updatedOrder),
 				ponyPrice: updatedOrder.partner_cost,
 				exchangeRate: updatedOrder.exchange_rate,
 				partnerTrackNumber: updatedOrder.partner_track_number,
@@ -227,7 +228,7 @@ router.patch('/:id', async (req, res, next) => {
 				orderCode: updatedOrder.code,
 				orderStatus: updatedOrder.status,
 				weight: updatedOrder.weight,
-				deliveryPrice: updatedOrder.current_price,
+				deliveryPrice: getFinalPrice(updatedOrder),
 				ponyPrice: updatedOrder.partner_cost,
 				exchangeRate: updatedOrder.exchange_rate,
 				partnerTrackNumber: updatedOrder.partner_track_number,
@@ -298,7 +299,7 @@ router.patch('/', async (req, res, next) => {
 				orderCode: order.code,
 				orderStatus: order.status,
 				weight: order.weight,
-				deliveryPrice: order.current_price,
+				deliveryPrice: getFinalPrice(order),
 				ponyPrice: order.partner_cost,
 				exchangeRate: order.exchange_rate,
 				partnerTrackNumber: order.partner_track_number,
