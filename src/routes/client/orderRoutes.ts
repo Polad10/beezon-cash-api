@@ -10,6 +10,7 @@ import { createOrder, Order } from '../../services/order'
 import { City } from '../../enums/City'
 import { recreateOrderTracks } from '../../services/orderTrack'
 import { recreateOrderTypeMappings } from '../../services/orderTypeMapping'
+import { getFinalPrice } from '../../utils/order'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -61,7 +62,7 @@ router.post('/', async (req, res, next) => {
 			orderCode: orderWithDetails.code,
 			orderStatus: orderWithDetails.status,
 			weight: orderWithDetails.weight,
-			deliveryPrice: orderWithDetails.current_price,
+			deliveryPrice: new Decimal(0),
 			ponyPrice: orderWithDetails.partner_cost,
 		})
 
@@ -235,7 +236,7 @@ router.post('/:orderId/bonus', async (req, res, next) => {
 			return [updatedOrder, updatedUser]
 		})
 
-		sendBonusAppliedMessage(updatedUser.tg_id, updatedOrder.code, updatedOrder.current_price)
+		sendBonusAppliedMessage(updatedUser.tg_id, updatedOrder.code, getFinalPrice(updatedOrder))
 		res.status(httpStatusCodes.ok).json({ order: updatedOrder, user: updatedUser })
 	} catch (ex) {
 		next(ex)
