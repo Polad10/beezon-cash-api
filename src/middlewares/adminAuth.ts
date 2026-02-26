@@ -3,35 +3,29 @@ import httpStatusCodes from '../constants/httpStatusCodes'
 import { log } from '../utils/log'
 import { randomUUID } from 'crypto'
 import { LogLevel } from '../models/log.model'
+import { sessions } from '../localStorage/sessions'
 
 export function adminAuthMiddleware(req: Request, res: Response, next: NextFunction) {
-  const [authType, authData] = (req.header('authorization') || '').split(' ')
+	const sid = req.cookies?.admin_session
 
-  try {
-    switch (authType) {
-      case 'Bearer':
-        if (process.env.BEEZON_API_SECRET !== authData) {
-          logUnauthorized(authType, authData)
-          return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
-        }
+	try {
+		if (!sid || !sessions.has(sid)) {
+			logUnauthorized(sid)
+			return res.sendStatus(httpStatusCodes.unauthorized)
+		}
 
-        return next()
-      default:
-        logUnauthorized(authType, authData)
-        return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
-    }
-  } catch (ex) {
-    logUnauthorized(authType, authData, ex)
-    return res.status(httpStatusCodes.unauthorized).send('Unauthorized')
-  }
+		return next()
+	} catch (ex) {
+		logUnauthorized(sid, ex)
+		res.sendStatus(httpStatusCodes.unauthorized)
+	}
 }
 
-async function logUnauthorized(authType: string, authData: string, ex?: any) {
-  const extra = {
-    authType,
-    authData,
-    exception: ex,
-  }
+async function logUnauthorized(authData: string, ex?: any) {
+	const extra = {
+		authData,
+		exception: ex,
+	}
 
-  await log(randomUUID(), LogLevel.ERROR, 'Unauthorized', extra)
+	await log(randomUUID(), LogLevel.ERROR, 'Unauthorized', extra)
 }

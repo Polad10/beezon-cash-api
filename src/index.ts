@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import clientMeRoutes from './routes/client/meRoutes'
 import clientOrderRoutes from './routes/client/orderRoutes'
+import adminMeRoutes from './routes/admin/meRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminGeRuRoutes from './routes/admin/geru/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
@@ -25,6 +26,8 @@ import { getErrorData } from './utils/error'
 import { log } from './utils/log'
 import { randomUUID } from 'crypto'
 import { LogLevel } from './models/log.model'
+import adminAuthRoutes from './routes/admin/adminAuthRoutes'
+import cookieParser from 'cookie-parser'
 
 dotenv.config()
 
@@ -34,14 +37,19 @@ const port = 3001
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 app.use('/', logMiddleware)
+
+app.use('/api/admin', adminAuthRoutes)
+
 app.use('/api/client', clientAuthMiddleware)
 app.use('/api/admin', adminAuthMiddleware)
 
 app.use('/api/client/me', clientMeRoutes)
 app.use('/api/client/orders', clientOrderRoutes)
 
+app.use('/api/admin/me', adminMeRoutes)
 app.use('/api/admin/users', adminUserRoutes)
 app.use('/api/admin/orders', adminOrderRoutes)
 app.use('/api/admin/messages', adminMessageRoutes)

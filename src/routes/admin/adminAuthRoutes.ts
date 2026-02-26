@@ -1,8 +1,8 @@
 import express from 'express'
 import httpStatusCodes from '../../constants/httpStatusCodes'
+import { sessions } from '../../localStorage/sessions'
 
 const router = express.Router()
-const sessions = new Set<string>()
 
 router.post('/login', (req, res) => {
 	const { username, password } = req.body
@@ -20,6 +20,8 @@ router.post('/login', (req, res) => {
 		secure: process.env.ENVIRONMENT !== 'local',
 		path: '/',
 	})
+
+	res.sendStatus(httpStatusCodes.ok)
 })
 
 export default router
