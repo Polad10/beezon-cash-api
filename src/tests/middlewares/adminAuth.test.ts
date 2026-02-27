@@ -8,91 +8,56 @@ vi.mock('../../utils/log', () => {
 	}
 })
 
+vi.mock('../../localStorage/sessions', () => {
+	return {
+		sessions: new Set(['valid-token']),
+	}
+})
+
 describe('adminAuthMiddleware tests', () => {
 	it('should return Unauthorized if there is no token', async () => {
 		const req = {
 			method: 'GET',
-			originalUrl: 'https://example.com',
-			headers: 'headers',
-			ip: 'ip',
-			body: 'body',
-			header: vi.fn(),
 		} as any
 
 		const res = {
-			locals: {},
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
+			sendStatus: vi.fn(),
 		} as any
 
 		await adminAuthMiddleware(req, res, () => {})
 
-		expect(res.status).toBeCalledWith(httpStatusCodes.unauthorized)
-		expect(res.send).toBeCalled()
-	})
-
-	it('should return Unauthorized if token is not Bearer', async () => {
-		vi.stubEnv('BEEZON_API_SECRET', 'correct-token')
-
-		const req = {
-			method: 'GET',
-			originalUrl: 'https://example.com',
-			headers: 'headers',
-			ip: 'ip',
-			body: 'body',
-			header: vi.fn().mockReturnValue('NotBearer correct-token'),
-		} as any
-
-		const res = {
-			locals: {},
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-		} as any
-
-		await adminAuthMiddleware(req, res, () => {})
-
-		expect(res.status).toBeCalledWith(httpStatusCodes.unauthorized)
-		expect(res.send).toBeCalled()
+		expect(res.sendStatus).toBeCalledWith(httpStatusCodes.unauthorized)
 	})
 
 	it('should return Unauthorized if token is not correct', async () => {
-		const req = {
-			method: 'GET',
-			originalUrl: 'https://example.com',
-			headers: 'headers',
-			ip: 'ip',
-			body: 'body',
-			header: vi.fn().mockReturnValue('Bearer wrong-token'),
-		} as any
-
-		const res = {
-			locals: {},
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-		} as any
-
-		await adminAuthMiddleware(req, res, () => {})
-
-		expect(res.status).toBeCalledWith(httpStatusCodes.unauthorized)
-		expect(res.send).toBeCalled()
-	})
-
-	it('should call next if token is correct', async () => {
 		vi.stubEnv('BEEZON_API_SECRET', 'correct-token')
 
 		const req = {
 			method: 'GET',
-			originalUrl: 'https://example.com',
-			headers: 'headers',
-			ip: 'ip',
-			body: 'body',
-			header: vi.fn().mockReturnValue('Bearer correct-token'),
+			cookies: {
+				admin_session: 'invalid-token',
+			},
 		} as any
 
 		const res = {
-			locals: {},
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
+			sendStatus: vi.fn(),
+		} as any
+
+		await adminAuthMiddleware(req, res, () => {})
+
+		expect(res.sendStatus).toBeCalledWith(httpStatusCodes.unauthorized)
+	})
+
+	it('should call next if token is correct', async () => {
+		const req = {
+			method: 'GET',
+			cookies: {
+				admin_session: 'valid-token',
+			},
+		} as any
+
+		const res = {
+			sendStatus: vi.fn(),
 		} as any
 
 		const next = vi.fn()
