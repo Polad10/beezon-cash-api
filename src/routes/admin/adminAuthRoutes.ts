@@ -1,6 +1,7 @@
 import express from 'express'
 import httpStatusCodes from '../../constants/httpStatusCodes'
 import { sessions } from '../../localStorage/sessions'
+import { randomUUID } from 'crypto'
 
 const router = express.Router()
 
@@ -12,7 +13,7 @@ router.post('/login', (req, res, next) => {
 			return res.sendStatus(httpStatusCodes.unauthorized)
 		}
 
-		const session = crypto.randomUUID()
+		const session = randomUUID()
 		sessions.add(session)
 
 		res.cookie('admin_session', session, {
