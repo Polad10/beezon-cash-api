@@ -18,7 +18,7 @@ const proxyConfig = process.env.SOCKS5_PROXY_IP
 			ip: process.env.SOCKS5_PROXY_IP,
 			port: Number(process.env.SOCKS5_PROXY_PORT || 1080),
 			socksType: 5 as const,
-			timeout: 30000, // Increase timeout to 30 seconds
+			timeout: 30000,
 			...(process.env.SOCKS5_PROXY_USER && {
 				username: process.env.SOCKS5_PROXY_USER,
 				password: process.env.SOCKS5_PROXY_PASS,
