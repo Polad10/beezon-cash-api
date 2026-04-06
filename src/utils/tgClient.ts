@@ -12,23 +12,8 @@ const tgApiHash = String(process.env.TG_API_HASH)
 const sessionFile = 'data/session.txt'
 const stringSession = new StringSession(fs.existsSync(sessionFile) ? fs.readFileSync(sessionFile).toString() : '')
 
-// Proxy configuration
-const proxyConfig = process.env.SOCKS5_PROXY_IP
-	? {
-			ip: process.env.SOCKS5_PROXY_IP,
-			port: Number(process.env.SOCKS5_PROXY_PORT || 1080),
-			socksType: 5 as const,
-			timeout: 30000,
-			...(process.env.SOCKS5_PROXY_USER && {
-				username: process.env.SOCKS5_PROXY_USER,
-				password: process.env.SOCKS5_PROXY_PASS,
-			}),
-		}
-	: undefined
-
 const tgClient = new TelegramClient(stringSession, tgApiId, tgApiHash, {
 	connectionRetries: 3,
-	...(proxyConfig && { proxy: proxyConfig }),
 })
 
 const rl = readline.createInterface({
