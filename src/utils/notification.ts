@@ -1,5 +1,4 @@
 import { setTimeout } from 'timers/promises'
-import { OrderStatus } from '../enums/OrderStatus'
 import { Decimal } from '@prisma/client/runtime/library'
 import { log } from './log'
 import { randomUUID } from 'crypto'
@@ -7,7 +6,7 @@ import { LogLevel } from '../models/log.model'
 import Handlebars from 'handlebars'
 import { OrderRecepient, OrderRecepientGeRu } from '../models/OrderRecepient'
 import { CashbackRecepient } from '../models/CashbackRecepient'
-import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import tgClient from './tgClient'
 import { getErrorData } from './error'
 
@@ -29,45 +28,24 @@ export async function sendStageUpdateGeRuMessages(orderRecepients: OrderRecepien
 
 export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 	try {
-		let message: string | undefined = undefined
+		const templateText = (await prisma.message.findUnique({ where: { order_status: orderRecepient.orderStatus } }))
+			?.text
 
-		if (orderRecepient.orderStatus == OrderStatus.New) {
-			const templateText = (await prisma.message.findUnique({ where: { order_status: OrderStatus.New } }))?.text
-			const template = Handlebars.compile(templateText)
-			message = template({ orderCode: orderRecepient.orderCode })
-		} else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryInTbilisi) {
-			const templateText = (
-				await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryInTbilisi } })
-			)?.text
-
-			const template = Handlebars.compile(templateText)
-			message = template({
-				weight: orderRecepient.weight,
-				deliveryPrice: orderRecepient.deliveryPrice,
-				deliveryPriceRub: orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate!),
-				exchangeRate: orderRecepient.exchangeRate,
-			})
-		} else if (orderRecepient.orderStatus == OrderStatus.ReadyForDeliveryByPony) {
-			const templateText = (
-				await prisma.message.findUnique({ where: { order_status: OrderStatus.ReadyForDeliveryByPony } })
-			)?.text
-			const template = Handlebars.compile(templateText)
-			message = template({
-				weight: orderRecepient.weight,
-				deliveryPrice: orderRecepient.deliveryPrice,
-				deliveryPriceRub: orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate!),
-				ponyPrice: orderRecepient.ponyPrice,
-				exchangeRate: orderRecepient.exchangeRate,
-			})
-		} else if (orderRecepient.orderStatus == OrderStatus.WaitingForDeliveryByPony) {
-			const templateText = (
-				await prisma.message.findUnique({ where: { order_status: OrderStatus.WaitingForDeliveryByPony } })
-			)?.text
-			const template = Handlebars.compile(templateText)
-			message = template({
-				partnerTrackNumber: orderRecepient.partnerTrackNumber,
-			})
+		if (!templateText) {
+			return
 		}
+
+		const template = Handlebars.compile(templateText)
+
+		const message = template({
+			orderCode: orderRecepient.orderCode,
+			weight: orderRecepient.weight,
+			deliveryPrice: orderRecepient.deliveryPrice,
+			deliveryPriceRub: orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate!),
+			ponyPrice: orderRecepient.ponyPrice,
+			exchangeRate: orderRecepient.exchangeRate,
+			partnerTrackNumber: orderRecepient.partnerTrackNumber,
+		})
 
 		if (message) {
 			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
@@ -88,21 +66,16 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 
 export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientGeRu) {
 	try {
-		let message: string | undefined = undefined
+		const templateText = (
+			await prisma.message_ge_ru.findUnique({ where: { order_status: orderRecepient.orderStatus } })
+		)?.text
 
-		if (orderRecepient.orderStatus == OrderStatusGeRu.InvoiceCreated) {
-			const templateText = (
-				await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.InvoiceCreated } })
-			)?.text
-			const template = Handlebars.compile(templateText)
-			message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
-		} else if (orderRecepient.orderStatus == OrderStatusGeRu.DrivingInRf) {
-			const templateText = (
-				await prisma.message_ge_ru.findUnique({ where: { order_status: OrderStatusGeRu.DrivingInRf } })
-			)?.text
-			const template = Handlebars.compile(templateText)
-			message = template({ orderTrackNumber: orderRecepient.cdekTrackNr })
+		if (!templateText) {
+			return
 		}
+
+		const template = Handlebars.compile(templateText)
+		const message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
 
 		if (message) {
 			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
