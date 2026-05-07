@@ -26,16 +26,33 @@ const router = express.Router()
 
 router.get('/', async (req, res, next) => {
 	try {
-		const { startDate } = req.query
+		const { startDate, endDate, dateType } = req.query
+
+		const dateTypeMap = {
+			creation: 'date',
+			delivery: 'end_date',
+			payment: 'payment_date',
+		} as const
+
+		type DateType = keyof typeof dateTypeMap
+
+		const safeDateType: DateType = (dateType as string) in dateTypeMap ? (dateType as DateType) : 'creation'
+		const dbDateField = dateTypeMap[safeDateType]
+
+		const dateFilter = {
+			...(startDate && { gte: new Date(startDate as string) }),
+			...(endDate && { lte: new Date(endDate as string) }),
+		}
+
+		const where =
+			Object.keys(dateFilter).length > 0
+				? {
+						[dbDateField]: dateFilter,
+					}
+				: undefined
 
 		const orders = await prisma.order.findMany({
-			where: startDate
-				? {
-						date: {
-							gte: new Date(startDate as string),
-						},
-					}
-				: undefined,
+			where,
 			include: {
 				order_type_mappings: true,
 				order_tracks: true,

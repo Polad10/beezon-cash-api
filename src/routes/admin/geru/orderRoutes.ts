@@ -11,16 +11,33 @@ const router = express.Router()
 
 router.get('/', async (req, res, next) => {
 	try {
-		const { startDate } = req.query
+		const { startDate, endDate, dateType } = req.query
+
+		const dateTypeMap = {
+			creation: 'created_at',
+			delivery: 'delivered_at',
+			payment: 'payment_date',
+		} as const
+
+		type DateType = keyof typeof dateTypeMap
+
+		const safeDateType: DateType = (dateType as string) in dateTypeMap ? (dateType as DateType) : 'creation'
+		const dbDateField = dateTypeMap[safeDateType]
+
+		const dateFilter = {
+			...(startDate && { gte: new Date(startDate as string) }),
+			...(endDate && { lte: new Date(endDate as string) }),
+		}
+
+		const where =
+			Object.keys(dateFilter).length > 0
+				? {
+						[dbDateField]: dateFilter,
+					}
+				: undefined
 
 		const orders = await prisma.order_ge_ru.findMany({
-			where: startDate
-				? {
-						created_at: {
-							gte: new Date(startDate as string),
-						},
-				  }
-				: undefined,
+			where,
 		})
 
 		res.json(orders)
@@ -174,8 +191,8 @@ router.patch('/', async (req, res, next) => {
 							delivered_at: patch.status == OrderStatusGeRu.Delivered ? new Date() : null,
 							updated_at: new Date(),
 						},
-					})
-				)
+					}),
+				),
 			)
 
 			return orders
@@ -183,7 +200,7 @@ router.patch('/', async (req, res, next) => {
 
 		const ordersWithUser: any[] = await getOrders(
 			prisma,
-			patches.map((patch) => patch.id)
+			patches.map((patch) => patch.id),
 		)
 
 		if (req.body.send_notification) {
