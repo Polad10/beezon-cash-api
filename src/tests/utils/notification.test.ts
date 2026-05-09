@@ -20,6 +20,11 @@ vi.mock('../../utils/tgClient', () => {
 	}
 })
 
+const { messageFindUniqueMock, messageGeRuFindUniqueMock } = vi.hoisted(() => ({
+	messageFindUniqueMock: vi.fn(),
+	messageGeRuFindUniqueMock: vi.fn(),
+}))
+
 vi.mock('@prisma/client', async () => {
 	var actualPrismaClient = await vi.importActual('@prisma/client')
 
@@ -28,10 +33,10 @@ vi.mock('@prisma/client', async () => {
 		PrismaClient: vi.fn().mockImplementation(() => {
 			return {
 				message: {
-					findUnique: vi.fn().mockResolvedValue({ text: 'Some text' }),
+					findUnique: messageFindUniqueMock,
 				},
 				message_ge_ru: {
-					findUnique: vi.fn().mockResolvedValue({ text: 'Some text' }),
+					findUnique: messageGeRuFindUniqueMock,
 				},
 			}
 		}),
@@ -44,11 +49,14 @@ vi.mock('../../utils/log', () => {
 	}
 })
 
-describe('sendStageUpdateMessage tests', () => {
-	beforeEach(() => {
-		vi.clearAllMocks()
-	})
+beforeEach(() => {
+	vi.clearAllMocks()
 
+	messageFindUniqueMock.mockResolvedValue({ text: 'Some text' })
+	messageGeRuFindUniqueMock.mockResolvedValue({ text: 'Some text' })
+})
+
+describe('sendStageUpdateMessage tests', () => {
 	it('should send a message, if order status is in the list', async () => {
 		const recipient = {
 			orderCode: 'A1',
@@ -67,6 +75,8 @@ describe('sendStageUpdateMessage tests', () => {
 			orderStatus: OrderStatus.Delivered,
 			tgId: 123,
 		} as any
+
+		messageFindUniqueMock.mockResolvedValue(null)
 
 		await sendStageUpdateMessage(recipient)
 
@@ -91,17 +101,12 @@ describe('sendStageUpdateMessage tests', () => {
 
 		await expect(sendStageUpdateMessage(recipient)).resolves.not.toThrow()
 
-		expect(log as any).toHaveBeenCalledWith(
-			expect.any(String),
-			LogLevel.ERROR,
-			expect.any(String),
-			{
-				tgId: recipient.tgId,
-				orderCode: recipient.orderCode,
-				orderStatus: recipient.orderStatus,
-				exception: error,
-			}
-		)
+		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
+			tgId: recipient.tgId,
+			orderCode: recipient.orderCode,
+			orderStatus: recipient.orderStatus,
+			exception: error,
+		})
 	})
 })
 
@@ -129,6 +134,8 @@ describe('sendStageUpdateGeRuMessage tests', async () => {
 			tgId: 123,
 		} as any
 
+		messageGeRuFindUniqueMock.mockResolvedValue(null)
+
 		await sendStageUpdateGeRuMessage(recipient)
 
 		expect(tgClient.sendMessage).not.toHaveBeenCalled()
@@ -152,17 +159,12 @@ describe('sendStageUpdateGeRuMessage tests', async () => {
 
 		await expect(sendStageUpdateGeRuMessage(recipient)).resolves.not.toThrow()
 
-		expect(log as any).toHaveBeenCalledWith(
-			expect.any(String),
-			LogLevel.ERROR,
-			expect.any(String),
-			{
-				tgId: recipient.tgId,
-				orderCode: recipient.orderCode,
-				orderStatus: recipient.orderStatus,
-				exception: error,
-			}
-		)
+		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
+			tgId: recipient.tgId,
+			orderCode: recipient.orderCode,
+			orderStatus: recipient.orderStatus,
+			exception: error,
+		})
 	})
 })
 
@@ -193,20 +195,13 @@ describe('sendBonusAppliedMessage tests', () => {
 
 		;(tgClient.sendMessage as any).mockRejectedValue(error)
 
-		await expect(
-			sendBonusAppliedMessage(data.tgId, data.orderCode, data.newPrice)
-		).resolves.not.toThrow()
+		await expect(sendBonusAppliedMessage(data.tgId, data.orderCode, data.newPrice)).resolves.not.toThrow()
 
-		expect(log as any).toHaveBeenCalledWith(
-			expect.any(String),
-			LogLevel.ERROR,
-			expect.any(String),
-			{
-				tgId: data.tgId,
-				orderCode: data.orderCode,
-				exception: error,
-			}
-		)
+		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
+			tgId: data.tgId,
+			orderCode: data.orderCode,
+			exception: error,
+		})
 	})
 })
 
@@ -245,15 +240,10 @@ describe('sendCashbackAppliedMessage tests', () => {
 
 		await expect(sendCashbackAppliedMessage(recepient)).resolves.not.toThrow()
 
-		expect(log as any).toHaveBeenCalledWith(
-			expect.any(String),
-			LogLevel.ERROR,
-			expect.any(String),
-			{
-				tgId: recepient.tgId,
-				orderCode: recepient.orderCode,
-				exception: error,
-			}
-		)
+		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
+			tgId: recepient.tgId,
+			orderCode: recepient.orderCode,
+			exception: error,
+		})
 	})
 })
