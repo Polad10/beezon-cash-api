@@ -41,7 +41,10 @@ export async function sendStageUpdateMessage(orderRecepient: OrderRecepient) {
 			orderCode: orderRecepient.orderCode,
 			weight: orderRecepient.weight,
 			deliveryPrice: orderRecepient.deliveryPrice,
-			deliveryPriceRub: orderRecepient.deliveryPrice?.mul(orderRecepient.exchangeRate!),
+			deliveryPriceRub:
+				orderRecepient.deliveryPrice != null && orderRecepient.exchangeRate != null
+					? orderRecepient.deliveryPrice.mul(orderRecepient.exchangeRate)
+					: undefined,
 			ponyPrice: orderRecepient.ponyPrice,
 			exchangeRate: orderRecepient.exchangeRate,
 			partnerTrackNumber: orderRecepient.partnerTrackNumber,
