@@ -21,6 +21,7 @@ enum PaymentMethod {
   TBC
   Tinkoff
   Cash
+  Terminal
 }
 
 model order {
