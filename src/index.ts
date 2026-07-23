@@ -6,9 +6,11 @@ import clientOrderRoutes from './routes/client/orderRoutes'
 import adminMeRoutes from './routes/admin/meRoutes'
 import adminOrderRoutes from './routes/admin/orderRoutes'
 import adminGeRuRoutes from './routes/admin/geru/orderRoutes'
+import adminGeEuRoutes from './routes/admin/geeu/orderRoutes'
 import adminUserRoutes from './routes/admin/userRoutes'
 import adminMessageRoutes from './routes/admin/messageRoutes'
 import adminMessageGeRuRoutes from './routes/admin/geru/messageRoutes'
+import adminMessageGeEuRoutes from './routes/admin/geeu/messageRoutes'
 import adminTranasctionRoutes from './routes/admin/transactionRoutes'
 import adminSettingRoutes from './routes/admin/settingRoutes'
 import { clientAuthMiddleware } from './middlewares/clientAuth'
@@ -18,6 +20,7 @@ import { errorMiddleware } from './middlewares/error'
 import { logMiddleware } from './middlewares/log'
 import publicOrderRoutes from './routes/public/orderRoutes'
 import publicOrderGeRuRoutes from './routes/public/geru/orderRoutes'
+import publicOrderGeEuRoutes from './routes/public/geeu/orderRoutes'
 import cron from 'node-cron'
 import { exec } from 'child_process'
 import fs from 'fs'
@@ -57,9 +60,12 @@ app.use('/api/admin/transactions', adminTranasctionRoutes)
 app.use('/api/admin/settings', adminSettingRoutes)
 app.use('/api/admin/geru/messages', adminMessageGeRuRoutes)
 app.use('/api/admin/geru/orders', adminGeRuRoutes)
+app.use('/api/admin/geeu/messages', adminMessageGeEuRoutes)
+app.use('/api/admin/geeu/orders', adminGeEuRoutes)
 
 app.use('/api/public/orders', publicOrderRoutes)
 app.use('/api/public/geru/orders', publicOrderGeRuRoutes)
+app.use('/api/public/geeu/orders', publicOrderGeEuRoutes)
 
 app.use(errorMiddleware)
 

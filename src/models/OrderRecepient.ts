@@ -1,6 +1,6 @@
 import { Decimal } from '@prisma/client/runtime/library'
 import { OrderStatus } from '../enums/OrderStatus'
-import { OrderStatusGeRu } from '@prisma/client'
+import { OrderStatusGeEu, OrderStatusGeRu } from '@prisma/client'
 
 export interface OrderRecepient {
 	tgId: string
@@ -18,4 +18,11 @@ export interface OrderRecepientGeRu {
 	orderCode: number
 	orderStatus: OrderStatusGeRu
 	cdekTrackNr: string
+}
+
+export interface OrderRecepientGeEu {
+	tgId: string
+	orderCode: number
+	orderStatus: OrderStatusGeEu
+	trackNr: string
 }

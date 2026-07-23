@@ -16,6 +16,14 @@ enum OrderStatusGeRu {
   Delivered
 }
 
+enum OrderStatusGeEu {
+  New
+  InvoiceCreated
+  TakenByCourier
+  DrivingInEu
+  Delivered
+}
+
 enum PaymentMethod {
   NotPaid
   TBC
@@ -74,6 +82,29 @@ model order_ge_ru {
   payment_date      DateTime?
 }
 
+model order_ge_eu {
+  id                String          @id(map: "order_ge_eu_pk") @db.Uuid
+  hint_price        String
+  original_price    Decimal         @default(0) @db.Decimal(8, 2)
+  current_price     Decimal         @default(0) @db.Decimal(8, 2)
+  status            OrderStatusGeEu @default(New)
+  user_id           String          @db.Uuid
+  code              Int             @unique(map: "order_ge_eu_code_unique") @default(autoincrement())
+  description       String?
+  weight            Decimal         @default(0) @db.Decimal(8, 2)
+  weight_rounded    Boolean         @default(false)
+  receiver_name     String
+  receiver_phone_nr String
+  receiver_address  String
+  track_nr          String?
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @default(now())
+  delivered_at      DateTime?
+  user              user            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "order_ge_eu_user_fk")
+  payment_method    PaymentMethod   @default(NotPaid)
+  payment_date      DateTime?
+}
+
 model order_status {
   id      Int      @id(map: "order_status_pk") @default(autoincrement())
   name    String   @unique(map: "name_unique") @db.VarChar(50)
@@ -93,6 +124,7 @@ model user {
   balance              Decimal         @default(0) @db.Decimal(8, 2)
   orders               order[]
   orders_ge_ru         order_ge_ru[]
+  orders_ge_eu         order_ge_eu[]
   inviter              user?           @relation("userTouser", fields: [invited_by], references: [id], map: "user_fk")
   other_user           user[]          @relation("userTouser")
   transaction          transaction[]
@@ -115,6 +147,13 @@ model message_ge_ru {
   name         String          @db.VarChar(50)
   text         String
   order_status OrderStatusGeRu @unique(map: "order_status_unique")
+}
+
+model message_ge_eu {
+  id           Int             @id(map: "message_ge_eu_pk") @default(autoincrement())
+  name         String          @db.VarChar(50)
+  text         String
+  order_status OrderStatusGeEu @unique(map: "message_ge_eu_order_status_unique")
 }
 
 model city {

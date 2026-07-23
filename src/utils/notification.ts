@@ -4,7 +4,7 @@ import { log } from './log'
 import { randomUUID } from 'crypto'
 import { LogLevel } from '../models/log.model'
 import Handlebars from 'handlebars'
-import { OrderRecepient, OrderRecepientGeRu } from '../models/OrderRecepient'
+import { OrderRecepient, OrderRecepientGeEu, OrderRecepientGeRu } from '../models/OrderRecepient'
 import { CashbackRecepient } from '../models/CashbackRecepient'
 import { PrismaClient } from '@prisma/client'
 import tgClient from './tgClient'
@@ -22,6 +22,13 @@ export async function sendStageUpdateMessages(orderRecepients: OrderRecepient[])
 export async function sendStageUpdateGeRuMessages(orderRecepients: OrderRecepientGeRu[]) {
 	for (const orderRecepient of orderRecepients) {
 		await sendStageUpdateGeRuMessage(orderRecepient)
+		await setTimeout(5000)
+	}
+}
+
+export async function sendStageUpdateGeEuMessages(orderRecepients: OrderRecepientGeEu[]) {
+	for (const orderRecepient of orderRecepients) {
+		await sendStageUpdateGeEuMessage(orderRecepient)
 		await setTimeout(5000)
 	}
 }
@@ -79,6 +86,36 @@ export async function sendStageUpdateGeRuMessage(orderRecepient: OrderRecepientG
 
 		const template = Handlebars.compile(templateText)
 		const message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.cdekTrackNr })
+
+		if (message) {
+			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)
+		}
+	} catch (ex) {
+		const error = ex as Error
+
+		const extra = {
+			tgId: orderRecepient.tgId,
+			orderCode: orderRecepient.orderCode,
+			orderStatus: orderRecepient.orderStatus,
+			exception: getErrorData(error),
+		}
+
+		await log(randomUUID(), LogLevel.ERROR, "Couldn't send a stage update notification.", extra)
+	}
+}
+
+export async function sendStageUpdateGeEuMessage(orderRecepient: OrderRecepientGeEu) {
+	try {
+		const templateText = (
+			await prisma.message_ge_eu.findUnique({ where: { order_status: orderRecepient.orderStatus } })
+		)?.text
+
+		if (!templateText) {
+			return
+		}
+
+		const template = Handlebars.compile(templateText)
+		const message = template({ orderCode: orderRecepient.orderCode, orderTrackNumber: orderRecepient.trackNr })
 
 		if (message) {
 			await sendMessage(orderRecepient.tgId, message, orderRecepient.orderCode)

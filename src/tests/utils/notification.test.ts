@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	sendBonusAppliedMessage,
 	sendCashbackAppliedMessage,
+	sendStageUpdateGeEuMessage,
 	sendStageUpdateGeRuMessage,
 	sendStageUpdateMessage,
 } from '../../utils/notification'
@@ -9,7 +10,7 @@ import tgClient from '../../utils/tgClient'
 import { OrderStatus } from '../../enums/OrderStatus'
 import { log } from '../../utils/log'
 import { LogLevel } from '../../models/log.model'
-import { OrderStatusGeRu } from '@prisma/client'
+import { OrderStatusGeEu, OrderStatusGeRu } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 
 vi.mock('../../utils/tgClient', () => {
@@ -20,9 +21,10 @@ vi.mock('../../utils/tgClient', () => {
 	}
 })
 
-const { messageFindUniqueMock, messageGeRuFindUniqueMock } = vi.hoisted(() => ({
+const { messageFindUniqueMock, messageGeRuFindUniqueMock, messageGeEuFindUniqueMock } = vi.hoisted(() => ({
 	messageFindUniqueMock: vi.fn(),
 	messageGeRuFindUniqueMock: vi.fn(),
+	messageGeEuFindUniqueMock: vi.fn(),
 }))
 
 vi.mock('@prisma/client', async () => {
@@ -37,6 +39,9 @@ vi.mock('@prisma/client', async () => {
 				},
 				message_ge_ru: {
 					findUnique: messageGeRuFindUniqueMock,
+				},
+				message_ge_eu: {
+					findUnique: messageGeEuFindUniqueMock,
 				},
 			}
 		}),
@@ -54,6 +59,7 @@ beforeEach(() => {
 
 	messageFindUniqueMock.mockResolvedValue({ text: 'Some text' })
 	messageGeRuFindUniqueMock.mockResolvedValue({ text: 'Some text' })
+	messageGeEuFindUniqueMock.mockResolvedValue({ text: 'Some text' })
 })
 
 describe('sendStageUpdateMessage tests', () => {
@@ -158,6 +164,64 @@ describe('sendStageUpdateGeRuMessage tests', async () => {
 		;(tgClient.sendMessage as any).mockRejectedValue(error)
 
 		await expect(sendStageUpdateGeRuMessage(recipient)).resolves.not.toThrow()
+
+		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
+			tgId: recipient.tgId,
+			orderCode: recipient.orderCode,
+			orderStatus: recipient.orderStatus,
+			exception: error,
+		})
+	})
+})
+
+describe('sendStageUpdateGeEuMessage tests', async () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it('should send a message, if order status is in the list', async () => {
+		const recipient = {
+			orderCode: 'A1',
+			orderStatus: OrderStatusGeEu.InvoiceCreated,
+			tgId: 123,
+		} as any
+
+		await sendStageUpdateGeEuMessage(recipient)
+
+		expect(tgClient.sendMessage).toHaveBeenCalled()
+	})
+
+	it('should not send a message, if order status is not in the list', async () => {
+		const recipient = {
+			orderCode: 'A1',
+			orderStatus: OrderStatusGeEu.Delivered,
+			tgId: 123,
+		} as any
+
+		messageGeEuFindUniqueMock.mockResolvedValue(null)
+
+		await sendStageUpdateGeEuMessage(recipient)
+
+		expect(tgClient.sendMessage).not.toHaveBeenCalled()
+	})
+
+	it('should silently log an error if sending message fails', async () => {
+		const recipient = {
+			orderCode: 'A1',
+			orderStatus: OrderStatusGeEu.InvoiceCreated,
+			tgId: 123,
+		} as any
+
+		const error = {
+			name: 'TestError',
+			message: 'Test error message',
+			cause: 'Cause',
+			stack: 'Stack',
+		}
+
+		;(tgClient.sendMessage as any).mockRejectedValue(error)
+
+		await expect(sendStageUpdateGeEuMessage(recipient)).resolves.not.toThrow()
 
 		expect(log as any).toHaveBeenCalledWith(expect.any(String), LogLevel.ERROR, expect.any(String), {
 			tgId: recipient.tgId,
