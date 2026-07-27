@@ -1,4 +1,4 @@
-import { OrderStatusGeEu, OrderStatusGeRu, PrismaClient } from '@prisma/client'
+import { OrderStatusGeRu, PrismaClient } from '@prisma/client'
 import { OrderStatus } from '../src/enums/OrderStatus'
 const prisma = new PrismaClient()
 
@@ -10,7 +10,6 @@ async function main() {
 	await fillMessageTable()
 	await fillTransactionTypeTable()
 	await fillMessageGeRuTable()
-	await fillMessageGeEuTable()
 }
 
 async function fillCityTable() {
@@ -461,40 +460,6 @@ async function fillMessageGeRuTable() {
 
 После получения заказа будем рады любой обратной связи по качеству доставки - это помогает нам становиться лучше`,
 			order_status: OrderStatusGeRu.DrivingInRf,
-		},
-	})
-}
-
-async function fillMessageGeEuTable() {
-	await prisma.message_ge_eu.upsert({
-		where: {
-			order_status: OrderStatusGeEu.InvoiceCreated,
-		},
-		update: {},
-		create: {
-			id: 0,
-			name: 'Создана накладная',
-			text: `<b>Заказ #{{orderCode}} на доставку из Грузии в Европу оформлен!</b>
-
-Трек-номер отправления: <code>{{orderTrackNumber}}</code>
-
-<b>Мы сообщим, когда посылка будет передана в службу доставки</b>`,
-			order_status: OrderStatusGeEu.InvoiceCreated,
-		},
-	})
-
-	await prisma.message_ge_eu.upsert({
-		where: {
-			order_status: OrderStatusGeEu.DrivingInEu,
-		},
-		update: {},
-		create: {
-			id: 1,
-			name: 'Поехало по Европе',
-			text: `<b>Ваша посылка #<code>{{orderTrackNumber}}</code> в пути!</b>
-
-После получения заказа будем рады любой обратной связи по качеству доставки - это помогает нам становиться лучше`,
-			order_status: OrderStatusGeEu.DrivingInEu,
 		},
 	})
 }

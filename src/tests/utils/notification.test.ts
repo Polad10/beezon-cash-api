@@ -182,7 +182,7 @@ describe('sendStageUpdateGeEuMessage tests', async () => {
 	it('should send a message, if order status is in the list', async () => {
 		const recipient = {
 			orderCode: 'A1',
-			orderStatus: OrderStatusGeEu.InvoiceCreated,
+			orderStatus: OrderStatusGeEu.AtWarehouse1,
 			tgId: 123,
 		} as any
 
@@ -208,7 +208,7 @@ describe('sendStageUpdateGeEuMessage tests', async () => {
 	it('should silently log an error if sending message fails', async () => {
 		const recipient = {
 			orderCode: 'A1',
-			orderStatus: OrderStatusGeEu.InvoiceCreated,
+			orderStatus: OrderStatusGeEu.AtWarehouse1,
 			tgId: 123,
 		} as any
 

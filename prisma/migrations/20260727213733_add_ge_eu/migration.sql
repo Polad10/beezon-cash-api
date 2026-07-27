@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "OrderStatusGeEu" AS ENUM ('New', 'InvoiceCreated', 'TakenByCourier', 'DrivingInEu', 'Delivered');
+CREATE TYPE "OrderStatusGeEu" AS ENUM ('New', 'AtWarehouse1', 'AtWarehouse2', 'Delivering', 'Delivered');
 
 -- CreateTable
 CREATE TABLE "order_ge_eu" (

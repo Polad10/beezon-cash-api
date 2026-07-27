@@ -18,9 +18,9 @@ enum OrderStatusGeRu {
 
 enum OrderStatusGeEu {
   New
-  InvoiceCreated
-  TakenByCourier
-  DrivingInEu
+  AtWarehouse1
+  AtWarehouse2
+  Delivering
   Delivered
 }
 
