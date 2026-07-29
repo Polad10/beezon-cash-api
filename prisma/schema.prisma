@@ -26,10 +26,19 @@ enum OrderStatusGeEu {
 
 enum PaymentMethod {
   NotPaid
-  TBC
+  TBCGel
   Tinkoff
   Cash
   Terminal
+  CREDOGel
+  BOGGel
+  TBCEur
+  CREDOEur
+  BOGEur
+  TBCUsd
+  CREDOUsd
+  BOGUsd
+  USDT
 }
 
 model order {
